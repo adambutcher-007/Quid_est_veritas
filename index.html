@@ -444,9 +444,6 @@ function reveal(){
   if(actx && actx.state==='suspended') actx.resume();
 
   const t=pickTruth();
-  numEl.textContent = t.n;
-  textEl.textContent = t.text;
-  refEl.textContent = '— ' + t.ref;
 
   app.classList.remove('state-idle','state-revealed');
   // force reflow so re-revealing restarts the sweep animation
@@ -459,6 +456,10 @@ function reveal(){
   clearTimeout(tA); clearTimeout(tB);
   tA=setTimeout(revealChime, 2350);
   tB=setTimeout(()=>{
+    numEl.textContent = t.n;
+    textEl.textContent = t.text;
+    refEl.textContent = '— ' + t.ref;
+
     app.classList.remove('state-revealing');
     app.classList.add('state-revealed');
     treasury.textContent = seen.size + ' of 300 truths beheld';
