@@ -1,0 +1,4049 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>The Nativity: Light of the World</title>
+<!-- Build: M7 polish — v1.0 -->
+
+<style>
+  :root {
+    --gold: #e8c56a;
+    --deep: #10131f;
+    --panel: rgba(16, 19, 31, 0.88);
+    --text: #f2ecd9;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: var(--deep); font-family: Georgia, 'Times New Roman', serif; color: var(--text); }
+  canvas#game { position: fixed; inset: 0; display: block; touch-action: none; }
+
+  .layer { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .hidden { display: none !important; }
+
+  /* ---- Title screen ---- */
+  #title { background: radial-gradient(ellipse at 50% 35%, #2a3352 0%, var(--deep) 70%); z-index: 30; cursor: pointer; text-align: center; padding: 24px; }
+  #title h1 { font-size: clamp(28px, 6vw, 54px); color: var(--gold); letter-spacing: 2px; text-shadow: 0 0 24px rgba(232,197,106,.45); }
+  #title h2 { font-size: clamp(14px, 3vw, 22px); font-weight: normal; font-style: italic; margin-top: 10px; opacity: .85; }
+  #title .verse { max-width: 560px; margin-top: 26px; font-style: italic; font-size: clamp(13px, 2.6vw, 17px); line-height: 1.5; opacity: .75; }
+  #tapBegin { margin-top: 40px; padding: 16px 42px; font-size: clamp(16px, 3.4vw, 20px); font-family: inherit; color: var(--deep); background: var(--gold); border: none; border-radius: 999px; cursor: pointer; box-shadow: 0 0 30px rgba(232,197,106,.35); animation: pulse 2.4s ease-in-out infinite; }
+  @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+  #titleStar { font-size: clamp(34px, 7vw, 60px); color: var(--gold); text-shadow: 0 0 30px var(--gold); margin-bottom: 12px; }
+
+  /* ---- Loading / fallback ---- */
+  #loadMsg { z-index: 40; background: var(--deep); font-size: 18px; text-align: center; padding: 24px; line-height: 1.6; }
+
+  /* ---- Fade transition ---- */
+  #fade { z-index: 25; background: #000; opacity: 0; pointer-events: none; transition: opacity .8s ease; }
+
+  /* ---- HUD ---- */
+  #hud { z-index: 10; pointer-events: none; }
+  #menuBtn { position: fixed; top: calc(10px + env(safe-area-inset-top)); right: calc(10px + env(safe-area-inset-right)); width: 52px; height: 52px; border-radius: 50%; border: 1px solid rgba(232,197,106,.5); background: var(--panel); color: var(--gold); font-size: 22px; pointer-events: auto; cursor: pointer; }
+  #interactBtn { position: fixed; bottom: calc(26px + env(safe-area-inset-bottom)); right: calc(26px + env(safe-area-inset-right)); width: 84px; height: 84px; border-radius: 50%; border: 2px solid var(--gold); background: rgba(232,197,106,.18); color: var(--gold); font-family: inherit; font-size: 15px; pointer-events: auto; cursor: pointer; backdrop-filter: blur(2px); }
+  #sceneLabel { position: fixed; top: calc(12px + env(safe-area-inset-top)); left: 14px; font-size: 14px; font-style: italic; opacity: .7; }
+  #toast { position: fixed; bottom: 130px; left: 50%; transform: translateX(-50%); max-width: 86vw; background: var(--panel); border: 1px solid rgba(232,197,106,.4); border-radius: 10px; padding: 12px 20px; font-size: 15px; text-align: center; opacity: 0; transition: opacity .4s; }
+  #hint { position: fixed; bottom: calc(14px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); font-size: 12px; opacity: .5; white-space: nowrap; }
+
+  /* ---- Virtual joystick ---- */
+  #joyBase { position: fixed; width: 120px; height: 120px; border-radius: 50%; border: 2px solid rgba(242,236,217,.35); background: rgba(242,236,217,.08); z-index: 11; pointer-events: none; }
+  #joyKnob { position: absolute; width: 52px; height: 52px; left: 34px; top: 34px; border-radius: 50%; background: rgba(232,197,106,.55); }
+
+  /* ---- Pause menu ---- */
+  #pause { z-index: 35; background: rgba(6,8,14,.82); backdrop-filter: blur(3px); }
+  #pause .panel { background: var(--panel); border: 1px solid rgba(232,197,106,.4); border-radius: 14px; padding: 28px 30px; width: min(360px, 90vw); text-align: center; }
+  #pause h3 { color: var(--gold); font-size: 22px; margin-bottom: 18px; }
+  #pause label { display: block; text-align: left; font-size: 14px; margin: 14px 0 4px; opacity: .85; }
+  #pause input[type=range] { width: 100%; accent-color: var(--gold); }
+  .btnRow { display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; justify-content: center; }
+  .btn { padding: 11px 20px; font-family: inherit; font-size: 15px; border-radius: 8px; border: 1px solid rgba(232,197,106,.55); background: transparent; color: var(--text); cursor: pointer; }
+  .btn.primary { background: var(--gold); color: var(--deep); border: none; }
+  #pause .small { font-size: 12px; opacity: .55; margin-top: 16px; }
+
+  /* ---- Dialogue ---- */
+  #dialogue { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(18px + env(safe-area-inset-bottom)); width: min(680px, 94vw); background: var(--panel); border: 1px solid rgba(232,197,106,.45); border-radius: 14px; padding: 16px 18px; z-index: 20; cursor: pointer; }
+  #dlgSpeaker { color: var(--gold); font-size: 15px; margin-bottom: 6px; letter-spacing: 1px; }
+  #dlgText { font-size: 16px; line-height: 1.5; min-height: 48px; }
+  #dlgChoices { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+  #dlgChoices button { text-align: left; padding: 11px 14px; font-family: inherit; font-size: 15px; color: var(--text); background: rgba(232,197,106,.1); border: 1px solid rgba(232,197,106,.4); border-radius: 8px; cursor: pointer; }
+  #dlgChoices button:hover { background: rgba(232,197,106,.25); }
+  #objective { position: fixed; top: calc(34px + env(safe-area-inset-top)); left: 14px; font-size: 13px; color: var(--gold); opacity: .9; max-width: 62vw; }
+  #meters { position: fixed; top: calc(58px + env(safe-area-inset-top)); left: 14px; font-size: 13px; color: var(--text); opacity: .85; background: rgba(16,19,31,.55); padding: 4px 10px; border-radius: 8px; }
+
+  /* ---- Journal & scene completion ---- */
+  #journal, #complete, #credits { z-index: 36; background: rgba(6,8,14,.85); backdrop-filter: blur(3px); }
+  .bigPanel { background: var(--panel); border: 1px solid rgba(232,197,106,.4); border-radius: 14px; padding: 26px 28px; width: min(480px, 92vw); max-height: 80vh; overflow-y: auto; }
+  .bigPanel h3 { color: var(--gold); margin-bottom: 14px; }
+  .fragment { border-left: 3px solid var(--gold); padding: 8px 12px; margin: 10px 0; font-size: 14px; line-height: 1.5; background: rgba(232,197,106,.07); }
+  .fragment b { color: var(--gold); }
+
+  /* ---- M7 polish: touch targets & accessibility ---- */
+  button { touch-action: manipulation; }
+  .btn { min-height: 48px; }
+  #dlgChoices button { min-height: 48px; padding: 13px 16px; }
+  body.bigText #dlgText { font-size: 19px; }
+  body.bigText #dlgSpeaker { font-size: 17px; }
+  body.bigText #dlgChoices button { font-size: 17px; }
+  body.bigText #toast { font-size: 17px; }
+  body.bigText #objective { font-size: 15px; }
+  body.bigText #meters { font-size: 15px; }
+  body.reducedMotion #tapBegin { animation: none; }
+</style>
+</head>
+<body>
+
+<canvas id="game"></canvas>
+
+<!-- Loading / CDN fallback -->
+<div id="loadMsg" class="layer">Loading&hellip;</div>
+
+<!-- Title -->
+<div id="title" class="layer hidden">
+  <div id="titleStar">&#10022;</div>
+  <h1>The Nativity</h1>
+  <h2>Light of the World</h2>
+  <p class="verse">&ldquo;For there is born to you today, in David&rsquo;s city, a Savior, who is Christ the Lord.&rdquo; &mdash; Luke 2:11 (WEB)</p>
+  <button id="tapBegin">Tap to Begin</button>
+</div>
+
+<!-- HUD -->
+<div id="hud" class="hidden">
+  <div id="sceneLabel"></div>
+  <div id="objective"></div>
+  <div id="meters" class="hidden"></div>
+  <button id="menuBtn" aria-label="Menu">&#9776;</button>
+  <button id="interactBtn" class="hidden">Interact</button>
+  <div id="toast"></div>
+  <div id="hint"></div>
+</div>
+<div id="joyBase" class="hidden"><div id="joyKnob"></div></div>
+
+<!-- Pause menu -->
+<div id="pause" class="layer hidden">
+  <div class="panel">
+    <h3>Paused</h3>
+    <label>Music Volume</label>
+    <input type="range" id="volMusic" min="0" max="100" value="70">
+    <label>Sound Effects Volume</label>
+    <input type="range" id="volSfx" min="0" max="100" value="80">
+    <div class="btnRow">
+      <button class="btn" id="textSizeBtn">Text Size: Normal</button>
+      <button class="btn" id="motionBtn">Motion: Full</button>
+    </div>
+    <div class="btnRow">
+      <button class="btn" id="sfxBell">&#128276; Bell</button>
+      <button class="btn" id="sfxShimmer">&#10024; Shimmer</button>
+      <button class="btn" id="sfxStep">&#128099; Step</button>
+    </div>
+    <div class="btnRow">
+      <button class="btn" id="journalBtn">&#128214; Journal</button>
+      <button class="btn primary" id="resumeBtn">Resume</button>
+    </div>
+    <p class="small">v1.0 &middot; The Nativity: Light of the World</p>
+  </div>
+</div>
+
+<!-- Dialogue panel -->
+<div id="dialogue" class="hidden">
+  <div id="dlgSpeaker"></div>
+  <div id="dlgText"></div>
+  <div id="dlgChoices"></div>
+</div>
+
+<!-- Verse journal -->
+<div id="journal" class="layer hidden">
+  <div class="bigPanel">
+    <h3>Verse Journal</h3>
+    <div id="journalList"></div>
+    <div class="btnRow"><button class="btn primary" id="journalClose">Close</button></div>
+  </div>
+</div>
+
+<!-- Credits -->
+<div id="credits" class="layer hidden">
+  <div class="bigPanel" style="text-align:center">
+    <h3>The Nativity: Light of the World</h3>
+    <div id="creditsBody" style="line-height:1.7; font-size:14px"></div>
+    <div class="btnRow">
+      <button class="btn" id="creditsHallBtn">Prophecy Hall</button>
+      <button class="btn" id="creditsExploreBtn">Explore Bethlehem</button>
+      <button class="btn primary" id="creditsReplayBtn">Play Again</button>
+    </div>
+  </div>
+</div>
+
+<!-- Scene complete -->
+<div id="complete" class="layer hidden">
+  <div class="bigPanel" style="text-align:center">
+    <h3 id="completeTitle"></h3>
+    <p id="completeBody" style="line-height:1.6"></p>
+    <div class="btnRow"><button class="btn primary" id="completeBtn">Continue</button></div>
+  </div>
+</div>
+
+<div id="fade"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"
+        onerror="document.getElementById('loadMsg').innerHTML='An internet connection is needed the first time the game loads.<br><br>Please connect and refresh the page.'"></script>
+
+<script>
+'use strict';
+(function () {
+  if (typeof THREE === 'undefined') return; // CDN fallback message already shown
+
+  /* =====================================================
+     AudioEngine — all sound synthesized with Web Audio API
+  ===================================================== */
+  const AudioEngine = {
+    ctx: null, master: null, sfxBus: null, musicBus: null,
+
+    unlock() {
+      if (this.ctx) { if (this.ctx.state === 'suspended') this.ctx.resume(); return; }
+      const AC = window.AudioContext || window.webkitAudioContext;
+      this.ctx = new AC();
+      this.master = this.ctx.createGain();
+      this.master.connect(this.ctx.destination);
+      this.sfxBus = this.ctx.createGain();
+      this.musicBus = this.ctx.createGain();
+      this.sfxBus.connect(this.master);
+      this.musicBus.connect(this.master);
+      this.setSfxVolume(0.8);
+      this.setMusicVolume(0.7);
+    },
+    setSfxVolume(v)   { if (this.sfxBus)   this.sfxBus.gain.value = v; },
+    setMusicVolume(v) { if (this.musicBus) this.musicBus.gain.value = v; },
+    suspend() { if (this.ctx && this.ctx.state === 'running') this.ctx.suspend(); },
+    resume()  { if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume(); },
+
+    _noiseBuffer(seconds) {
+      const rate = this.ctx.sampleRate;
+      const buf = this.ctx.createBuffer(1, rate * seconds, rate);
+      const d = buf.getChannelData(0);
+      for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+      return buf;
+    },
+
+    /* SFX 1 — Footstep: short filtered noise burst */
+    footstep() {
+      if (!this.ctx) return;
+      const t = this.ctx.currentTime;
+      const src = this.ctx.createBufferSource();
+      src.buffer = this._noiseBuffer(0.12);
+      const filt = this.ctx.createBiquadFilter();
+      filt.type = 'lowpass';
+      filt.frequency.setValueAtTime(420 + Math.random() * 180, t);
+      const g = this.ctx.createGain();
+      g.gain.setValueAtTime(0.35, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.11);
+      src.connect(filt).connect(g).connect(this.sfxBus);
+      src.start(t); src.stop(t + 0.13);
+    },
+
+    /* SFX 2 — Soft bell: sine fundamental + decaying harmonics */
+    bell(freq = 880) {
+      if (!this.ctx) return;
+      const t = this.ctx.currentTime;
+      [[1, 0.5, 1.6], [2.76, 0.18, 1.0], [5.4, 0.07, 0.6]].forEach(([mult, amp, dur]) => {
+        const o = this.ctx.createOscillator();
+        o.type = 'sine';
+        o.frequency.value = freq * mult;
+        const g = this.ctx.createGain();
+        g.gain.setValueAtTime(amp, t);
+        g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+        o.connect(g).connect(this.sfxBus);
+        o.start(t); o.stop(t + dur + 0.05);
+      });
+    },
+
+    /* SFX 3 — Angel shimmer: rising detuned triad cluster */
+    shimmer() {
+      if (!this.ctx) return;
+      const t = this.ctx.currentTime;
+      const base = 440;
+      [1, 1.25, 1.5, 2, 2.5].forEach((ratio, i) => {
+        const o = this.ctx.createOscillator();
+        o.type = 'triangle';
+        o.frequency.setValueAtTime(base * ratio * 0.85, t);
+        o.frequency.exponentialRampToValueAtTime(base * ratio, t + 1.4);
+        const trem = this.ctx.createOscillator();
+        trem.frequency.value = 5 + i * 1.3;
+        const tremG = this.ctx.createGain();
+        tremG.gain.value = 0.04;
+        trem.connect(tremG);
+        const g = this.ctx.createGain();
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(0.11, t + 0.6 + i * 0.12);
+        g.gain.exponentialRampToValueAtTime(0.001, t + 2.6);
+        tremG.connect(g.gain);
+        o.connect(g).connect(this.sfxBus);
+        o.start(t); o.stop(t + 2.7);
+        trem.start(t); trem.stop(t + 2.7);
+      });
+    },
+
+    /* Sustained pad chord on the music bus */
+    pad(freqs, when = 0, dur = 1.4, vol = 0.06) {
+      if (!this.ctx) return;
+      const t = this.ctx.currentTime + when;
+      freqs.forEach(f => {
+        [0, 4].forEach(det => {
+          const o = this.ctx.createOscillator();
+          o.type = 'triangle';
+          o.frequency.value = f;
+          o.detune.value = det;
+          const g = this.ctx.createGain();
+          g.gain.setValueAtTime(0.0001, t);
+          g.gain.exponentialRampToValueAtTime(vol, t + dur * 0.3);
+          g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+          o.connect(g).connect(this.musicBus);
+          o.start(t); o.stop(t + dur + 0.05);
+        });
+      });
+    },
+
+    /* Magnificat cue — swelling D–G–A–D progression */
+    magnificat() {
+      if (!this.ctx) return;
+      const D4 = 293.66, Fs4 = 369.99, A4 = 440, G3 = 196, B3 = 246.94,
+            D5 = 587.33, A3 = 220, Cs4 = 277.18, E4 = 329.63;
+      this.pad([D4, Fs4, A4], 0, 1.7);
+      this.pad([G3, B3, D4], 1.5, 1.7);
+      this.pad([A3, Cs4, E4], 3.0, 1.7);
+      this.pad([D4, Fs4, A4, D5], 4.5, 3.4, 0.075);
+      setTimeout(() => this.shimmer(), 4500);
+    },
+
+    /* Wood-planing scrape (Scene 2) */
+    scrape() {
+      if (!this.ctx) return;
+      const t = this.ctx.currentTime;
+      const src = this.ctx.createBufferSource();
+      src.buffer = this._noiseBuffer(0.3);
+      const filt = this.ctx.createBiquadFilter();
+      filt.type = 'bandpass';
+      filt.frequency.setValueAtTime(1400, t);
+      filt.frequency.exponentialRampToValueAtTime(500, t + 0.28);
+      filt.Q.value = 1.2;
+      const g = this.ctx.createGain();
+      g.gain.setValueAtTime(0.28, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
+      src.connect(filt).connect(g).connect(this.sfxBus);
+      src.start(t); src.stop(t + 0.32);
+    },
+
+    /* Low pulsing danger drone (Scene 3) */
+    drone(dur = 2.4) {
+      if (!this.ctx) return;
+      const t = this.ctx.currentTime;
+      const o = this.ctx.createOscillator();
+      o.type = 'sawtooth';
+      o.frequency.value = 55;
+      const lfo = this.ctx.createOscillator();
+      lfo.frequency.value = 3.2;
+      const lg = this.ctx.createGain();
+      lg.gain.value = 0.04;
+      lfo.connect(lg);
+      const g = this.ctx.createGain();
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.09, t + 0.4);
+      g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+      lg.connect(g.gain);
+      const filt = this.ctx.createBiquadFilter();
+      filt.type = 'lowpass';
+      filt.frequency.value = 240;
+      o.connect(filt).connect(g).connect(this.sfxBus);
+      o.start(t); o.stop(t + dur + 0.05);
+      lfo.start(t); lfo.stop(t + dur + 0.05);
+    },
+
+    /* Soft baby coo (Scene 4) */
+    coo() {
+      if (!this.ctx) return;
+      const t = this.ctx.currentTime;
+      const o = this.ctx.createOscillator();
+      o.type = 'sine';
+      o.frequency.setValueAtTime(430, t);
+      o.frequency.linearRampToValueAtTime(620, t + 0.25);
+      o.frequency.linearRampToValueAtTime(480, t + 0.55);
+      const g = this.ctx.createGain();
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.08, t + 0.12);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.6);
+      o.connect(g).connect(this.sfxBus);
+      o.start(t); o.stop(t + 0.65);
+    },
+
+    /* Looping rain wash (Scene 3) */
+    _rain: null,
+    rainStart() {
+      if (!this.ctx || this._rain) return;
+      const src = this.ctx.createBufferSource();
+      src.buffer = this._noiseBuffer(2);
+      src.loop = true;
+      const filt = this.ctx.createBiquadFilter();
+      filt.type = 'lowpass';
+      filt.frequency.value = 850;
+      const g = this.ctx.createGain();
+      g.gain.setValueAtTime(0.0001, this.ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.09, this.ctx.currentTime + 1.5);
+      src.connect(filt).connect(g).connect(this.sfxBus);
+      src.start();
+      this._rain = { src, g };
+    },
+    rainStop() {
+      if (!this._rain) return;
+      const { src, g } = this._rain;
+      g.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 1);
+      setTimeout(() => { try { src.stop(); } catch (e) {} }, 1200);
+      this._rain = null;
+    },
+
+    /* Gloria — full angelic-host choir cue (Scene 5) */
+    gloria() {
+      if (!this.ctx) return;
+      const G3 = 196, B3 = 246.94, D4 = 293.66, G4 = 392, Fs4 = 369.99,
+            A4 = 440, E4 = 329.63, C4 = 261.63, B4 = 493.88, D5 = 587.33;
+      this.pad([G3, B3, D4, G4], 0, 2.2, 0.08);
+      this.pad([D4, Fs4, A4], 2.0, 2.2, 0.08);
+      this.pad([E4, G4, B4], 4.0, 2.2, 0.08);
+      this.pad([C4, E4, G4], 6.0, 2.4, 0.08);
+      this.pad([G3, B3, D4, G4, D5], 8.2, 4.2, 0.09);
+      this.shimmer();
+      setTimeout(() => this.shimmer(), 3200);
+      setTimeout(() => this.shimmer(), 6400);
+    },
+
+    /* Sheep bleat */
+    bleat() {
+      if (!this.ctx) return;
+      const t = this.ctx.currentTime;
+      const o = this.ctx.createOscillator();
+      o.type = 'sawtooth';
+      o.frequency.setValueAtTime(580, t);
+      o.frequency.linearRampToValueAtTime(500, t + 0.32);
+      const vib = this.ctx.createOscillator();
+      vib.frequency.value = 26;
+      const vg = this.ctx.createGain();
+      vg.gain.value = 34;
+      vib.connect(vg).connect(o.frequency);
+      const filt = this.ctx.createBiquadFilter();
+      filt.type = 'bandpass';
+      filt.frequency.value = 900;
+      filt.Q.value = 1.4;
+      const g = this.ctx.createGain();
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.09, t + 0.05);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+      o.connect(filt).connect(g).connect(this.sfxBus);
+      o.start(t); o.stop(t + 0.4);
+      vib.start(t); vib.stop(t + 0.4);
+    },
+
+    /* Donkey hoof clop — two quick ticks */
+    clop() {
+      if (!this.ctx) return;
+      [0, 0.11].forEach(off => {
+        const t = this.ctx.currentTime + off;
+        const src = this.ctx.createBufferSource();
+        src.buffer = this._noiseBuffer(0.04);
+        const filt = this.ctx.createBiquadFilter();
+        filt.type = 'highpass';
+        filt.frequency.value = 900;
+        const g = this.ctx.createGain();
+        g.gain.setValueAtTime(0.12, t);
+        g.gain.exponentialRampToValueAtTime(0.001, t + 0.04);
+        src.connect(filt).connect(g).connect(this.sfxBus);
+        src.start(t); src.stop(t + 0.05);
+      });
+    },
+
+    /* ---- Generative ambient music (looping chord pads) ---- */
+    _musicTimer: null,
+    _profiles: {
+      nazareth: { bar: 3.6, vol: 0.032, chords: [
+        [293.66, 369.99, 440], [196, 246.94, 293.66],
+        [246.94, 293.66, 369.99], [220, 277.18, 329.63]
+      ]},
+      journey: { bar: 3.0, vol: 0.03, chords: [
+        [293.66, 349.23, 440], [261.63, 329.63, 392],
+        [233.08, 293.66, 349.23], [220, 277.18, 329.63]
+      ]},
+      lullaby: { bar: 4.4, vol: 0.034, chords: [
+        [293.66, 369.99, 440], [196, 246.94, 293.66],
+        [220, 277.18, 329.63], [293.66, 369.99, 440, 587.33]
+      ]},
+      night: { bar: 4.0, vol: 0.028, chords: [
+        [246.94, 293.66, 369.99], [196, 246.94, 293.66],
+        [164.81, 196, 246.94], [185, 220, 277.18]
+      ]}
+    },
+    startMusic(name) {
+      this.stopMusic();
+      const p = this._profiles[name];
+      if (!p) return;
+      let i = 0;
+      const step = () => {
+        if (!this.ctx || this.ctx.state !== 'running') return;
+        this.pad(p.chords[i % p.chords.length], 0, p.bar * 1.25, p.vol);
+        i++;
+      };
+      step();
+      this._musicTimer = setInterval(step, p.bar * 1000);
+    },
+    stopMusic() {
+      if (this._musicTimer) {
+        clearInterval(this._musicTimer);
+        this._musicTimer = null;
+      }
+    }
+  };
+
+  /* =====================================================
+     Input — keyboard (WASD/arrows) + touch joystick + look
+  ===================================================== */
+  const Input = {
+    move: { x: 0, y: 0 },          // -1..1 movement vector
+    look: { dx: 0, dy: 0 },        // per-frame look delta
+    interactPressed: false,
+    _keys: {},
+    _joyTouch: null, _lookTouch: null,
+    _joyOrigin: { x: 0, y: 0 },
+    _mouseDown: false, _mouseLast: { x: 0, y: 0 },
+    isTouchDevice: ('ontouchstart' in window) || navigator.maxTouchPoints > 0,
+
+    init(canvas) {
+      // Keyboard
+      window.addEventListener('keydown', e => {
+        this._keys[e.code] = true;
+        if (e.code === 'KeyE') this.interactPressed = true;
+        if (e.code === 'Escape') Game.togglePause();
+        if ((e.code === 'Enter' || e.code === 'Space') && Game.dialogueActive) {
+          e.preventDefault();
+          DialogueSystem.advanceKey();
+        }
+      });
+      window.addEventListener('keyup', e => { this._keys[e.code] = false; });
+
+      // Mouse look
+      canvas.addEventListener('mousedown', e => { this._mouseDown = true; this._mouseLast = { x: e.clientX, y: e.clientY }; });
+      window.addEventListener('mouseup', () => { this._mouseDown = false; });
+      window.addEventListener('mousemove', e => {
+        if (!this._mouseDown) return;
+        this.look.dx += e.clientX - this._mouseLast.x;
+        this.look.dy += e.clientY - this._mouseLast.y;
+        this._mouseLast = { x: e.clientX, y: e.clientY };
+      });
+
+      // Touch: left half = joystick, right half = look
+      canvas.addEventListener('touchstart', e => {
+        for (const t of e.changedTouches) {
+          if (t.clientX < window.innerWidth / 2 && this._joyTouch === null) {
+            this._joyTouch = t.identifier;
+            this._joyOrigin = { x: t.clientX, y: t.clientY };
+            UI.showJoystick(t.clientX, t.clientY);
+          } else if (this._lookTouch === null) {
+            this._lookTouch = t.identifier;
+            this._mouseLast = { x: t.clientX, y: t.clientY };
+          }
+        }
+        e.preventDefault();
+      }, { passive: false });
+
+      canvas.addEventListener('touchmove', e => {
+        for (const t of e.changedTouches) {
+          if (t.identifier === this._joyTouch) {
+            const dx = t.clientX - this._joyOrigin.x;
+            const dy = t.clientY - this._joyOrigin.y;
+            const max = 50;
+            const len = Math.hypot(dx, dy) || 1;
+            const cl = Math.min(len, max);
+            this.move.x = (dx / len) * (cl / max);
+            this.move.y = (dy / len) * (cl / max);
+            UI.moveJoystickKnob(this.move.x * max, this.move.y * max);
+          } else if (t.identifier === this._lookTouch) {
+            this.look.dx += t.clientX - this._mouseLast.x;
+            this.look.dy += t.clientY - this._mouseLast.y;
+            this._mouseLast = { x: t.clientX, y: t.clientY };
+          }
+        }
+        e.preventDefault();
+      }, { passive: false });
+
+      const endTouch = e => {
+        for (const t of e.changedTouches) {
+          if (t.identifier === this._joyTouch) {
+            this._joyTouch = null;
+            this.move.x = 0; this.move.y = 0;
+            UI.hideJoystick();
+          } else if (t.identifier === this._lookTouch) {
+            this._lookTouch = null;
+          }
+        }
+      };
+      canvas.addEventListener('touchend', endTouch);
+      canvas.addEventListener('touchcancel', endTouch);
+    },
+
+    update() {
+      // Merge keyboard into move vector
+      let kx = 0, ky = 0;
+      if (this._keys['KeyW'] || this._keys['ArrowUp'])    ky -= 1;
+      if (this._keys['KeyS'] || this._keys['ArrowDown'])  ky += 1;
+      if (this._keys['KeyA'] || this._keys['ArrowLeft'])  kx -= 1;
+      if (this._keys['KeyD'] || this._keys['ArrowRight']) kx += 1;
+      if (kx || ky) {
+        const len = Math.hypot(kx, ky);
+        this.move.x = kx / len;
+        this.move.y = ky / len;
+      } else if (this._joyTouch === null) {
+        this.move.x = 0; this.move.y = 0;
+      }
+    },
+    consumeLook() {
+      const l = { dx: this.look.dx, dy: this.look.dy };
+      this.look.dx = 0; this.look.dy = 0;
+      return l;
+    },
+    consumeInteract() {
+      const p = this.interactPressed;
+      this.interactPressed = false;
+      return p;
+    }
+  };
+
+  /* =====================================================
+     Controller — shared third-person movement + camera.
+     W / joystick-up moves AWAY from the camera; S toward it.
+  ===================================================== */
+  const Controller = {
+    camYaw: 0, camPitch: 0.35, _step: 0,
+    reset(yaw = 0, pitch = 0.35) { this.camYaw = yaw; this.camPitch = pitch; this._step = 0; },
+    update(p, dt, opt = {}) {
+      const speed = opt.speed || 3.2;
+      const dist = opt.camDist || 5.2;
+      const height = opt.camHeight || 2.2;
+      const look = Input.consumeLook();
+      this.camYaw   -= look.dx * 0.005;
+      this.camPitch = Math.min(opt.maxPitch || 1.2, Math.max(opt.minPitch || 0.08, this.camPitch + look.dy * 0.004));
+
+      const mv = Input.move;
+      const moving = !!(mv.x || mv.y);
+      if (moving) {
+        const ang = this.camYaw;
+        // mv.y = -1 (W / joystick-up) => move along -(sin,cos) = away from camera
+        const dx = mv.x * Math.cos(ang) + mv.y * Math.sin(ang);
+        const dz = -mv.x * Math.sin(ang) + mv.y * Math.cos(ang);
+        p.position.x += dx * speed * dt;
+        p.position.z += dz * speed * dt;
+        if (opt.clamp) opt.clamp(p.position);
+        p.rotation.y = Math.atan2(dx, dz);
+        this._step -= dt;
+        if (this._step <= 0) { AudioEngine.footstep(); this._step = 0.34; }
+        p.position.y = Game.reducedMotion ? 0 : Math.abs(Math.sin(performance.now() * 0.012)) * 0.04;
+      } else {
+        p.position.y = 0;
+        this._step = 0;
+      }
+      Assets.animateWalk(p, moving, dt);
+
+      // Follow camera
+      const cx = p.position.x + Math.sin(this.camYaw) * Math.cos(this.camPitch) * dist;
+      const cz = p.position.z + Math.cos(this.camYaw) * Math.cos(this.camPitch) * dist;
+      const cy = p.position.y + height + Math.sin(this.camPitch) * dist * 0.8;
+      Game.camera.position.lerp(new THREE.Vector3(cx, cy, cz), 0.12);
+      Game.camera.lookAt(p.position.x, p.position.y + 1.1, p.position.z);
+      return moving;
+    }
+  };
+
+  /* =====================================================
+     UI helpers
+  ===================================================== */
+  const UI = {
+    el: id => document.getElementById(id),
+    show(id) { this.el(id).classList.remove('hidden'); },
+    hide(id) { this.el(id).classList.add('hidden'); },
+    _toastTimer: null,
+
+    toast(msg, ms = 3200) {
+      const t = this.el('toast');
+      t.innerHTML = msg;
+      t.style.opacity = 1;
+      clearTimeout(this._toastTimer);
+      this._toastTimer = setTimeout(() => { t.style.opacity = 0; }, ms);
+    },
+    setSceneLabel(txt) { this.el('sceneLabel').textContent = txt; },
+    setObjective(html) { this.el('objective').innerHTML = html; },
+    setMeters(html) { this.el('meters').innerHTML = html; },
+    setHint(txt) { this.el('hint').textContent = txt; },
+    showJoystick(x, y) {
+      const b = this.el('joyBase');
+      b.classList.remove('hidden');
+      b.style.left = (x - 60) + 'px';
+      b.style.top = (y - 60) + 'px';
+      this.moveJoystickKnob(0, 0);
+    },
+    moveJoystickKnob(dx, dy) {
+      this.el('joyKnob').style.transform = `translate(${dx}px, ${dy}px)`;
+    },
+    hideJoystick() { this.el('joyBase').classList.add('hidden'); },
+    fade(toBlack) {
+      this.el('fade').style.opacity = toBlack ? 1 : 0;
+    }
+  };
+
+  /* =====================================================
+     DialogueSystem — typewriter text, choices, blessings
+     Node: { who, text, next?, choices?[{label, next, blessing?}],
+             end?, blessing?, action? }
+  ===================================================== */
+  const DialogueSystem = {
+    script: null, nodeId: null, onComplete: null,
+    _typing: null, _full: '',
+
+    start(script, startId, onComplete) {
+      this.script = script;
+      this.onComplete = onComplete || null;
+      Game.dialogueActive = true;
+      UI.hide('interactBtn');
+      UI.show('dialogue');
+      this.goto(startId);
+    },
+
+    goto(id) {
+      const n = this.script[id];
+      this.nodeId = id;
+      if (!n) return this.end();
+      if (n.action) n.action();
+      if (n.blessing) Game.addBlessing();
+      UI.el('dlgSpeaker').textContent = n.who || '';
+      UI.el('dlgChoices').innerHTML = '';
+      const txt = UI.el('dlgText');
+      this._full = n.text;
+      txt.textContent = '';
+      let i = 0;
+      clearInterval(this._typing);
+      this._typing = setInterval(() => {
+        i += 2;
+        txt.textContent = this._full.slice(0, i);
+        if (i >= this._full.length) {
+          clearInterval(this._typing);
+          this._showOptions(n);
+        }
+      }, 24);
+    },
+
+    skip() {
+      if (this._typing) {
+        clearInterval(this._typing);
+        UI.el('dlgText').textContent = this._full;
+        this._showOptions(this.script[this.nodeId]);
+      }
+    },
+
+    /* Enter/Space: finish typing, or press a sole Continue button */
+    advanceKey() {
+      if (this._typing) { this.skip(); return; }
+      const box = UI.el('dlgChoices');
+      if (box.children.length === 1) box.children[0].click();
+    },
+
+    _showOptions(n) {
+      this._typing = null;
+      const box = UI.el('dlgChoices');
+      box.innerHTML = '';
+      if (n.choices) {
+        n.choices.forEach(c => {
+          const b = document.createElement('button');
+          b.textContent = c.label;
+          b.onclick = e => {
+            e.stopPropagation();
+            AudioEngine.bell(990);
+            if (c.blessing) Game.addBlessing();
+            this.goto(c.next);
+          };
+          box.appendChild(b);
+        });
+      } else {
+        const b = document.createElement('button');
+        b.textContent = n.end ? '✦ Finish' : 'Continue ▸';
+        b.onclick = e => {
+          e.stopPropagation();
+          if (n.end) this.end(); else this.goto(n.next);
+        };
+        box.appendChild(b);
+      }
+    },
+
+    end() {
+      clearInterval(this._typing);
+      this._typing = null;
+      UI.hide('dialogue');
+      Game.dialogueActive = false;
+      if (this.onComplete) {
+        const f = this.onComplete;
+        this.onComplete = null;
+        f();
+      }
+    }
+  };
+
+  /* =====================================================
+     Assets — procedural low-poly builders (M1 starter kit)
+  ===================================================== */
+  const Assets = {
+    /* Articulated person rig — arms pivot at the shoulder for walk animation */
+    person({ robe = 0x8a6f4d, head = 0xd9b48f, sash = 0x5a7a9e } = {}) {
+      const g = new THREE.Group();
+      const robeMat = new THREE.MeshLambertMaterial({ color: robe });
+      const skinMat = new THREE.MeshLambertMaterial({ color: head });
+      const sashMat = new THREE.MeshLambertMaterial({ color: sash });
+
+      const body = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.38, 1.15, 7), robeMat);
+      body.position.y = 0.575;
+      const headMesh = new THREE.Mesh(new THREE.SphereGeometry(0.17, 8, 6), skinMat);
+      headMesh.position.y = 1.32;
+      const hood = new THREE.Mesh(
+        new THREE.SphereGeometry(0.2, 8, 6, 0, Math.PI * 2, 0, Math.PI * 0.55), sashMat);
+      hood.position.y = 1.36;
+
+      const mkArm = side => {
+        const pivot = new THREE.Group();
+        pivot.position.set(0.26 * side, 1.05, 0);
+        const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.07, 0.55, 6), robeMat);
+        arm.position.y = -0.275;
+        const hand = new THREE.Mesh(new THREE.SphereGeometry(0.06, 6, 5), skinMat);
+        hand.position.y = -0.56;
+        pivot.add(arm, hand);
+        return pivot;
+      };
+      const leftArm = mkArm(-1), rightArm = mkArm(1);
+      g.add(body, headMesh, hood, leftArm, rightArm);
+      g.userData.limbs = { leftArm, rightArm };
+      return g;
+    },
+
+    /* Swing arms while walking; relax when idle */
+    animateWalk(person, moving, dt) {
+      const limbs = person.userData.limbs;
+      if (!limbs) return;
+      if (moving) {
+        const amp = (typeof Game !== 'undefined' && Game.reducedMotion) ? 0.22 : 0.55;
+        const sw = Math.sin(performance.now() * 0.012) * amp;
+        limbs.leftArm.rotation.x = sw;
+        limbs.rightArm.rotation.x = -sw;
+      } else {
+        limbs.leftArm.rotation.x *= Math.max(0, 1 - dt * 8);
+        limbs.rightArm.rotation.x *= Math.max(0, 1 - dt * 8);
+      }
+    },
+
+    tree() {
+      const g = new THREE.Group();
+      const trunk = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.1, 0.16, 1.4, 6),
+        new THREE.MeshLambertMaterial({ color: 0x6b4a2f })
+      );
+      trunk.position.y = 0.7;
+      const crown = new THREE.Mesh(
+        new THREE.IcosahedronGeometry(0.85, 0),
+        new THREE.MeshLambertMaterial({ color: 0x5f7a45, flatShading: true })
+      );
+      crown.position.y = 1.9;
+      g.add(trunk, crown);
+      return g;
+    },
+
+    rock() {
+      const m = new THREE.Mesh(
+        new THREE.DodecahedronGeometry(0.35 + Math.random() * 0.3, 0),
+        new THREE.MeshLambertMaterial({ color: 0x8d8577, flatShading: true })
+      );
+      m.position.y = 0.2;
+      m.rotation.set(Math.random(), Math.random(), Math.random());
+      return m;
+    },
+
+    well() {
+      const g = new THREE.Group();
+      const base = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.6, 0.7, 0.7, 8),
+        new THREE.MeshLambertMaterial({ color: 0x9a917f, flatShading: true })
+      );
+      base.position.y = 0.35;
+      const water = new THREE.Mesh(
+        new THREE.CircleGeometry(0.5, 8),
+        new THREE.MeshLambertMaterial({ color: 0x3f6c8e })
+      );
+      water.rotation.x = -Math.PI / 2;
+      water.position.y = 0.71;
+      const postMat = new THREE.MeshLambertMaterial({ color: 0x6b4a2f });
+      const p1 = new THREE.Mesh(new THREE.BoxGeometry(0.08, 1.2, 0.08), postMat);
+      p1.position.set(-0.55, 0.95, 0);
+      const p2 = p1.clone(); p2.position.x = 0.55;
+      const beam = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.08, 0.08), postMat);
+      beam.position.y = 1.55;
+      g.add(base, water, p1, p2, beam);
+      return g;
+    },
+
+    donkey() {
+      const g = new THREE.Group();
+      const fur = new THREE.MeshLambertMaterial({ color: 0x7d7268 });
+      const dark = new THREE.MeshLambertMaterial({ color: 0x55483e });
+      const body = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.45, 0.42), fur);
+      body.position.y = 0.62;
+      const neck = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.5, 0.2), fur);
+      neck.position.set(0.48, 0.95, 0);
+      neck.rotation.z = -0.55;
+      const head = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.18, 0.19), fur);
+      head.position.set(0.74, 1.14, 0);
+      head.rotation.z = -0.15;
+      const mkEar = side => {
+        const ear = new THREE.Mesh(new THREE.ConeGeometry(0.05, 0.26, 5), dark);
+        ear.position.set(0.6, 1.36, 0.09 * side);
+        ear.rotation.x = 0.25 * side;
+        return ear;
+      };
+      const mkLeg = (x, z) => {
+        const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.045, 0.62, 5), dark);
+        leg.position.set(x, 0.31, z);
+        return leg;
+      };
+      const tail = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.05, 0.45, 4), dark);
+      tail.position.set(-0.48, 0.55, 0);
+      tail.rotation.z = 0.5;
+      const mane = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.4, 0.06), dark);
+      mane.position.set(0.44, 1.05, 0);
+      mane.rotation.z = -0.55;
+      g.add(body, neck, head, mane, tail, mkEar(1), mkEar(-1),
+            mkLeg(0.35, 0.15), mkLeg(0.35, -0.15), mkLeg(-0.35, 0.15), mkLeg(-0.35, -0.15));
+      return g;
+    },
+
+    sheep() {
+      const g = new THREE.Group();
+      const wool = new THREE.MeshLambertMaterial({ color: 0xe8e2d2, flatShading: true });
+      const dark = new THREE.MeshLambertMaterial({ color: 0x4a4038 });
+      const body = new THREE.Mesh(new THREE.IcosahedronGeometry(0.34, 0), wool);
+      body.position.y = 0.42;
+      body.scale.set(1.25, 0.95, 0.9);
+      const head = new THREE.Mesh(new THREE.BoxGeometry(0.17, 0.16, 0.15), dark);
+      head.position.set(0.42, 0.5, 0);
+      const tuft = new THREE.Mesh(new THREE.IcosahedronGeometry(0.1, 0), wool);
+      tuft.position.set(0.42, 0.62, 0);
+      const mkLeg = (x, z) => {
+        const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.03, 0.3, 4), dark);
+        leg.position.set(x, 0.15, z);
+        return leg;
+      };
+      g.add(body, head, tuft,
+            mkLeg(0.2, 0.12), mkLeg(0.2, -0.12), mkLeg(-0.2, 0.12), mkLeg(-0.2, -0.12));
+      g.rotation.y = Math.random() * Math.PI * 2;
+      return g;
+    },
+
+    house() {
+      const g = new THREE.Group();
+      const wallMat = new THREE.MeshLambertMaterial({ color: 0xcbb894 });
+      const woodMat = new THREE.MeshLambertMaterial({ color: 0x6b4a2f });
+      const walls = new THREE.Mesh(new THREE.BoxGeometry(2.6, 1.9, 2.3), wallMat);
+      walls.position.y = 0.95;
+      const roof = new THREE.Mesh(new THREE.BoxGeometry(2.9, 0.18, 2.6),
+        new THREE.MeshLambertMaterial({ color: 0xb5a17e }));
+      roof.position.y = 1.99;
+      const parapet = new THREE.Mesh(new THREE.BoxGeometry(2.9, 0.16, 0.14), wallMat);
+      parapet.position.set(0, 2.15, 1.23);
+      const parapet2 = parapet.clone(); parapet2.position.z = -1.23;
+      const door = new THREE.Mesh(new THREE.BoxGeometry(0.55, 1.1, 0.06),
+        new THREE.MeshLambertMaterial({ color: 0x3a2c1e }));
+      door.position.set(0.4, 0.55, 1.16);
+      const lintel = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.1, 0.1), woodMat);
+      lintel.position.set(0.4, 1.15, 1.17);
+      const win = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.4, 0.06),
+        new THREE.MeshLambertMaterial({ color: 0x241c12 }));
+      win.position.set(-0.7, 1.25, 1.16);
+      g.add(walls, roof, parapet, parapet2, door, lintel, win);
+      return g;
+    },
+
+    stable() {
+      const g = new THREE.Group();
+      const stone = new THREE.MeshLambertMaterial({ color: 0xa89a82, flatShading: true });
+      const wood = new THREE.MeshLambertMaterial({ color: 0x6b4a2f });
+      const strawMat = new THREE.MeshLambertMaterial({ color: 0xd6b25e });
+
+      const back = new THREE.Mesh(new THREE.BoxGeometry(4.2, 2.0, 0.25), stone);
+      back.position.set(0, 1.0, -1.6);
+      const sideL = new THREE.Mesh(new THREE.BoxGeometry(0.25, 1.8, 3.2), stone);
+      sideL.position.set(-2.0, 0.9, 0);
+      const sideR = sideL.clone(); sideR.position.x = 2.0;
+      const postL = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.11, 2.2, 6), wood);
+      postL.position.set(-1.8, 1.1, 1.5);
+      const postR = postL.clone(); postR.position.x = 1.8;
+      const roof = new THREE.Mesh(new THREE.BoxGeometry(4.6, 0.14, 3.9), wood);
+      roof.position.set(0, 2.25, 0.1);
+      roof.rotation.x = 0.14;
+      const floor = new THREE.Mesh(new THREE.CircleGeometry(2.6, 10), strawMat);
+      floor.rotation.x = -Math.PI / 2;
+      floor.position.y = 0.02;
+
+      // Manger
+      const manger = new THREE.Group();
+      const trough = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.35, 0.5), wood);
+      trough.position.y = 0.45;
+      const straw = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.12, 0.4), strawMat);
+      straw.position.y = 0.62;
+      const legA = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.35, 0.08), wood);
+      legA.position.set(-0.35, 0.14, 0.15);
+      const legB = legA.clone(); legB.position.set(0.35, 0.14, -0.15);
+      const legC = legA.clone(); legC.position.set(-0.35, 0.14, -0.15);
+      const legD = legA.clone(); legD.position.set(0.35, 0.14, 0.15);
+      manger.add(trough, straw, legA, legB, legC, legD);
+      manger.position.set(0, 0, -0.5);
+
+      g.add(back, sideL, sideR, postL, postR, roof, floor, manger);
+      g.userData.manger = manger;
+      return g;
+    },
+
+    skyDome() {
+      const c = document.createElement('canvas');
+      c.width = 32; c.height = 256;
+      const x = c.getContext('2d');
+      const grad = x.createLinearGradient(0, 0, 0, 256);
+      grad.addColorStop(0.0, '#4a6fa5');
+      grad.addColorStop(0.45, '#87a5c4');
+      grad.addColorStop(0.75, '#d8c9a3');
+      grad.addColorStop(1.0, '#cbb894');
+      x.fillStyle = grad;
+      x.fillRect(0, 0, 32, 256);
+      const dome = new THREE.Mesh(
+        new THREE.SphereGeometry(85, 16, 10),
+        new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c), side: THREE.BackSide, fog: false })
+      );
+      return dome;
+    },
+
+    star() {
+      const g = new THREE.Group();
+      const mat = new THREE.MeshBasicMaterial({ color: 0xffe9a3 });
+      const core = new THREE.Mesh(new THREE.OctahedronGeometry(0.35, 0), mat);
+      const spikeV = new THREE.Mesh(new THREE.OctahedronGeometry(0.35, 0), mat);
+      spikeV.scale.set(0.25, 2.6, 0.25);
+      const spikeH = new THREE.Mesh(new THREE.OctahedronGeometry(0.35, 0), mat);
+      spikeH.scale.set(1.6, 0.25, 0.25);
+      const light = new THREE.PointLight(0xffe9a3, 0.7, 22);
+      g.add(core, spikeV, spikeH, light);
+      g.userData.light = light;
+      return g;
+    },
+
+    dust(count = 60, spread = 30, color = 0xfff4d6) {
+      const geo = new THREE.BufferGeometry();
+      const pos = new Float32Array(count * 3);
+      const vel = [];
+      for (let i = 0; i < count; i++) {
+        pos[i * 3]     = (Math.random() - 0.5) * spread;
+        pos[i * 3 + 1] = Math.random() * 4 + 0.3;
+        pos[i * 3 + 2] = (Math.random() - 0.5) * spread;
+        vel.push({ x: (Math.random() - 0.5) * 0.15, y: (Math.random() - 0.5) * 0.05, z: (Math.random() - 0.5) * 0.15 });
+      }
+      geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+      const pts = new THREE.Points(geo, new THREE.PointsMaterial({
+        color, size: 0.07, transparent: true, opacity: 0.55, sizeAttenuation: true
+      }));
+      pts.userData = { vel, spread };
+      return pts;
+    },
+
+    updateDust(pts, dt) {
+      const pos = pts.geometry.attributes.position;
+      const { vel, spread } = pts.userData;
+      for (let i = 0; i < vel.length; i++) {
+        let x = pos.getX(i) + vel[i].x * dt;
+        let y = pos.getY(i) + vel[i].y * dt;
+        let z = pos.getZ(i) + vel[i].z * dt;
+        if (Math.abs(x) > spread / 2) x = -x * 0.95;
+        if (y < 0.2 || y > 4.5) vel[i].y = -vel[i].y;
+        if (Math.abs(z) > spread / 2) z = -z * 0.95;
+        pos.setXYZ(i, x, y, z);
+      }
+      pos.needsUpdate = true;
+    },
+
+    table() {
+      const g = new THREE.Group();
+      const wood = new THREE.MeshLambertMaterial({ color: 0x6b4a2f });
+      const top = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.08, 0.8), wood);
+      top.position.y = 0.74;
+      const mkLeg = (x, z) => {
+        const l = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.72, 0.08), wood);
+        l.position.set(x, 0.36, z);
+        return l;
+      };
+      g.add(top, mkLeg(-0.6, 0.3), mkLeg(0.6, 0.3), mkLeg(-0.6, -0.3), mkLeg(0.6, -0.3));
+      return g;
+    },
+
+    lamp() {
+      const g = new THREE.Group();
+      const base = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.1, 0.12, 7),
+        new THREE.MeshLambertMaterial({ color: 0x8a6540 }));
+      base.position.y = 0.06;
+      const flame = new THREE.Mesh(new THREE.ConeGeometry(0.035, 0.1, 6),
+        new THREE.MeshBasicMaterial({ color: 0xffc46b }));
+      flame.position.y = 0.17;
+      const light = new THREE.PointLight(0xffb45e, 0.85, 7);
+      light.position.y = 0.3;
+      g.add(base, flame, light);
+      g.userData.light = light;
+      return g;
+    },
+
+    jar() {
+      const g = new THREE.Group();
+      const clay = new THREE.MeshLambertMaterial({ color: 0xa5654a });
+      const body = new THREE.Mesh(new THREE.SphereGeometry(0.28, 8, 6), clay);
+      body.position.y = 0.34;
+      body.scale.y = 1.25;
+      const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.16, 0.18, 7), clay);
+      neck.position.y = 0.72;
+      g.add(body, neck);
+      return g;
+    },
+
+    spindle() {
+      const g = new THREE.Group();
+      const wood = new THREE.MeshLambertMaterial({ color: 0x8a6540 });
+      const stick = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.5, 5), wood);
+      stick.position.y = 0.3;
+      stick.rotation.z = 0.5;
+      const whorl = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.03, 8), wood);
+      whorl.position.set(-0.1, 0.12, 0);
+      const basket = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.16, 0.18, 8),
+        new THREE.MeshLambertMaterial({ color: 0xc2a36b }));
+      basket.position.set(0.2, 0.09, 0.1);
+      const wool = new THREE.Mesh(new THREE.SphereGeometry(0.09, 6, 5),
+        new THREE.MeshLambertMaterial({ color: 0xeee8da }));
+      wool.position.set(0.2, 0.2, 0.1);
+      g.add(stick, whorl, basket, wool);
+      return g;
+    },
+
+    bowl() {
+      const g = new THREE.Group();
+      const b = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.09, 0.09, 8),
+        new THREE.MeshLambertMaterial({ color: 0x8a6540 }));
+      b.position.y = 0.05;
+      const bread = new THREE.Mesh(new THREE.SphereGeometry(0.07, 6, 5),
+        new THREE.MeshLambertMaterial({ color: 0xc9a86a }));
+      bread.position.y = 0.11;
+      bread.scale.y = 0.7;
+      g.add(b, bread);
+      return g;
+    },
+
+    rug() {
+      return new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.04, 1.0),
+        new THREE.MeshLambertMaterial({ color: 0x7d4a3a }));
+    },
+
+    scroll() {
+      const g = new THREE.Group();
+      const mat = new THREE.MeshLambertMaterial({ color: 0xe9ddb8, emissive: new THREE.Color(0x6a5518) });
+      const roll = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.4, 7), mat);
+      roll.rotation.z = Math.PI / 2;
+      const roll2 = roll.clone();
+      roll2.position.z = 0.12;
+      g.add(roll, roll2);
+      return g;
+    },
+
+    ox() {
+      const g = new THREE.Group();
+      const hide = new THREE.MeshLambertMaterial({ color: 0x8a5a3a });
+      const dark = new THREE.MeshLambertMaterial({ color: 0x5a3a24 });
+      const hornMat = new THREE.MeshLambertMaterial({ color: 0xe8e0cc });
+      const body = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.6, 0.55), hide);
+      body.position.y = 0.65;
+      const head = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.3, 0.3), hide);
+      head.position.set(0.72, 0.85, 0);
+      const mkHorn = side => {
+        const h = new THREE.Mesh(new THREE.ConeGeometry(0.04, 0.28, 5), hornMat);
+        h.position.set(0.72, 1.08, 0.14 * side);
+        h.rotation.z = -0.5;
+        h.rotation.x = 0.4 * side;
+        return h;
+      };
+      const mkLeg = (x, z) => {
+        const l = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.06, 0.5, 5), dark);
+        l.position.set(x, 0.25, z);
+        return l;
+      };
+      g.add(body, head, mkHorn(1), mkHorn(-1),
+            mkLeg(0.4, 0.2), mkLeg(0.4, -0.2), mkLeg(-0.4, 0.2), mkLeg(-0.4, -0.2));
+      return g;
+    },
+
+    jackal() {
+      const g = new THREE.Group();
+      const fur = new THREE.MeshLambertMaterial({ color: 0x4f4a42 });
+      const body = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.24, 0.2), fur);
+      body.position.y = 0.34;
+      const head = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.14, 0.14), fur);
+      head.position.set(0.34, 0.42, 0);
+      const ear = new THREE.Mesh(new THREE.ConeGeometry(0.035, 0.12, 4), fur);
+      ear.position.set(0.3, 0.55, 0);
+      const tail = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.045, 0.3, 4), fur);
+      tail.position.set(-0.32, 0.38, 0);
+      tail.rotation.z = 0.9;
+      const mkLeg = (x, z) => {
+        const l = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.02, 0.24, 4), fur);
+        l.position.set(x, 0.12, z);
+        return l;
+      };
+      g.add(body, head, ear, tail,
+            mkLeg(0.2, 0.07), mkLeg(0.2, -0.07), mkLeg(-0.2, 0.07), mkLeg(-0.2, -0.07));
+      return g;
+    },
+
+    baby() {
+      const g = new THREE.Group();
+      const swaddle = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.11, 0.34, 7),
+        new THREE.MeshLambertMaterial({ color: 0xf2ecd9 }));
+      swaddle.rotation.z = Math.PI / 2;
+      swaddle.position.y = 0.06;
+      const head = new THREE.Mesh(new THREE.SphereGeometry(0.08, 7, 6),
+        new THREE.MeshLambertMaterial({ color: 0xdfb896 }));
+      head.position.set(0.2, 0.08, 0);
+      g.add(swaddle, head);
+      return g;
+    },
+
+    hay() {
+      const m = new THREE.Mesh(new THREE.IcosahedronGeometry(0.3, 0),
+        new THREE.MeshLambertMaterial({ color: 0xd6b25e, flatShading: true }));
+      m.position.y = 0.22;
+      m.scale.set(1.2, 0.75, 1);
+      return m;
+    },
+
+    palm() {
+      const g = new THREE.Group();
+      const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.14, 2.4, 5),
+        new THREE.MeshLambertMaterial({ color: 0x8a6540 }));
+      trunk.position.y = 1.2;
+      trunk.rotation.z = 0.12;
+      g.add(trunk);
+      const frondMat = new THREE.MeshLambertMaterial({ color: 0x4f7a3d, flatShading: true });
+      for (let i = 0; i < 5; i++) {
+        const f = new THREE.Mesh(new THREE.ConeGeometry(0.14, 1.3, 4), frondMat);
+        const a = (i / 5) * Math.PI * 2;
+        f.position.set(0.28 + Math.cos(a) * 0.5, 2.4, Math.sin(a) * 0.5);
+        f.rotation.z = Math.PI / 2 + Math.cos(a) * 0.7;
+        f.rotation.y = -a;
+        f.scale.y = 0.9;
+        g.add(f);
+      }
+      return g;
+    },
+
+    campfire() {
+      const g = new THREE.Group();
+      const logMat = new THREE.MeshLambertMaterial({ color: 0x5d452c });
+      for (let i = 0; i < 3; i++) {
+        const log = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.8, 5), logMat);
+        log.rotation.z = Math.PI / 2;
+        log.rotation.y = (i / 3) * Math.PI;
+        log.position.y = 0.08;
+        g.add(log);
+      }
+      const flame = new THREE.Mesh(new THREE.ConeGeometry(0.16, 0.42, 6),
+        new THREE.MeshBasicMaterial({ color: 0xff9c46 }));
+      flame.position.y = 0.32;
+      const flame2 = new THREE.Mesh(new THREE.ConeGeometry(0.09, 0.28, 6),
+        new THREE.MeshBasicMaterial({ color: 0xffd98a }));
+      flame2.position.y = 0.38;
+      const light = new THREE.PointLight(0xff9c46, 1.1, 9);
+      light.position.y = 0.7;
+      g.add(flame, flame2, light);
+      g.userData.light = light;
+      g.userData.flames = [flame, flame2];
+      return g;
+    },
+
+    groundTexture() {
+      const c = document.createElement('canvas');
+      c.width = c.height = 128;
+      const x = c.getContext('2d');
+      x.fillStyle = '#a3915f';
+      x.fillRect(0, 0, 128, 128);
+      for (let i = 0; i < 900; i++) {
+        x.fillStyle = `rgba(${120 + Math.random() * 60 | 0},${100 + Math.random() * 50 | 0},${60 + Math.random() * 40 | 0},0.5)`;
+        x.fillRect(Math.random() * 128, Math.random() * 128, 2, 2);
+      }
+      const tex = new THREE.CanvasTexture(c);
+      tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+      tex.repeat.set(24, 24);
+      return tex;
+    }
+  };
+
+  /* =====================================================
+     SceneManager
+  ===================================================== */
+  const SceneManager = {
+    scenes: {}, current: null, currentName: null,
+    music: {
+      test: 'nazareth', scene1: 'nazareth', scene2: 'night', scene3: 'journey',
+      scene4: 'lullaby', scene5: 'night', scene6: 'lullaby', scene7: 'night',
+      scene8: 'journey', epilogue: 'lullaby', hall: 'nazareth'
+    },
+    register(name, sceneObj) { this.scenes[name] = sceneObj; },
+    async goto(name) {
+      UI.fade(true);
+      await new Promise(r => setTimeout(r, this.current ? 850 : 100));
+      if (this.current && this.current.dispose) this.current.dispose();
+      AudioEngine.stopMusic();
+      this.current = this.scenes[name];
+      this.currentName = name;
+      this.current.build();
+      // Blessing glow trail — grows brighter with gathered blessings
+      Game.glowLight = new THREE.PointLight(0xffe1a0, 0, 6);
+      Game.scene.add(Game.glowLight);
+      AudioEngine.startMusic(this.music[name]);
+      UI.setSceneLabel(this.current.label || '');
+      UI.fade(false);
+    },
+    update(dt) { if (this.current && this.current.update) this.current.update(dt); }
+  };
+
+  /* =====================================================
+     Test Scene — M1 sandbox (Nazareth hillside)
+  ===================================================== */
+  const TestScene = {
+    label: 'M2 Asset Showcase — Bethlehem Outskirts',
+    player: null, well: null, stable: null, star: null, dustPts: null,
+    camYaw: 0, camPitch: 0.35, time: 0,
+    stepTimer: 0, nearWell: false, stableToastShown: false,
+
+    build() {
+      const s = Game.scene;
+      while (s.children.length) s.remove(s.children[0]);
+
+      // Sky dome + fog
+      s.background = new THREE.Color(0x87a5c4);
+      s.fog = new THREE.Fog(0x87a5c4, 25, 60);
+      s.add(Assets.skyDome());
+
+      // Lights (1 ambient + 1 directional, per plan budget)
+      s.add(new THREE.AmbientLight(0xfff2dd, 0.55));
+      const sun = new THREE.DirectionalLight(0xffe9c4, 0.9);
+      sun.position.set(8, 14, 6);
+      s.add(sun);
+
+      // Ground
+      const ground = new THREE.Mesh(
+        new THREE.PlaneGeometry(80, 80),
+        new THREE.MeshLambertMaterial({ map: Assets.groundTexture() })
+      );
+      ground.rotation.x = -Math.PI / 2;
+      s.add(ground);
+
+      // Scatter props
+      for (let i = 0; i < 14; i++) {
+        const t = Assets.tree();
+        t.position.set((Math.random() - 0.5) * 60, 0, (Math.random() - 0.5) * 60);
+        if (t.position.length() < 6) t.position.setLength(8 + Math.random() * 10);
+        s.add(t);
+      }
+      for (let i = 0; i < 10; i++) {
+        const r = Assets.rock();
+        r.position.set((Math.random() - 0.5) * 56, 0.2, (Math.random() - 0.5) * 56);
+        if (r.position.length() < 5) r.position.multiplyScalar(3);
+        s.add(r);
+      }
+
+      // Interactable well
+      this.well = Assets.well();
+      this.well.position.set(4, 0, -5);
+      s.add(this.well);
+
+      // --- M2 showcase: village houses ---
+      const housePos = [[-9, 4, 0.4], [-12, 8, -0.3], [-7.5, 9.5, 2.6]];
+      housePos.forEach(([hx, hz, ry]) => {
+        const h = Assets.house();
+        h.position.set(hx, 0, hz);
+        h.rotation.y = ry;
+        s.add(h);
+      });
+
+      // --- Stable with manger, star above ---
+      this.stable = Assets.stable();
+      this.stable.position.set(9, 0, -12);
+      this.stable.rotation.y = -0.5;
+      s.add(this.stable);
+
+      this.star = Assets.star();
+      this.star.position.set(9, 9, -12);
+      s.add(this.star);
+
+      // --- Donkey by the stable ---
+      const donkey = Assets.donkey();
+      donkey.position.set(6.5, 0, -10);
+      donkey.rotation.y = 0.8;
+      s.add(donkey);
+
+      // --- Sheep flock ---
+      const flock = [[-3, 10], [-4.5, 11.5], [-2, 12], [-5, 9], [-3.5, 8.5], [-1.5, 10.8]];
+      flock.forEach(([fx, fz]) => {
+        const sh = Assets.sheep();
+        sh.position.set(fx, 0, fz);
+        s.add(sh);
+      });
+
+      // --- Shepherd NPC near the flock ---
+      const shepherd = Assets.person({ robe: 0x8a6f4d, sash: 0x6e5a3a });
+      shepherd.position.set(-2.5, 0, 9);
+      shepherd.rotation.y = 2.4;
+      s.add(shepherd);
+
+      // --- Drifting dust motes ---
+      this.dustPts = Assets.dust(60, 34);
+      s.add(this.dustPts);
+
+      // Player (Mary placeholder)
+      this.player = Assets.person({ robe: 0x7a8db0, sash: 0xdfe6ef });
+      this.player.position.set(0, 0, 0);
+      s.add(this.player);
+
+      Controller.reset();
+      this.time = 0; this.stableToastShown = false;
+      UI.setHint(Input.isTouchDevice
+        ? 'Left side: move  ·  Right side: look'
+        : 'WASD move · drag mouse to look · E interact · Esc menu');
+      UI.toast('M2 asset kit loaded — explore the village, stable, star, flock, and well.', 4600);
+    },
+
+    update(dt) {
+      const p = this.player;
+
+      // Movement + follow camera (W / joystick-up = away from camera)
+      Controller.update(p, dt, {
+        clamp: pos => {
+          pos.x = Math.max(-38, Math.min(38, pos.x));
+          pos.z = Math.max(-38, Math.min(38, pos.z));
+        }
+      });
+
+      // Ambient animation: star pulse + drifting dust
+      this.time += dt;
+      if (this.star) {
+        const pulse = 1 + Math.sin(this.time * 2.2) * 0.12;
+        this.star.scale.setScalar(pulse);
+        this.star.userData.light.intensity = 0.55 + Math.sin(this.time * 2.2) * 0.2;
+        this.star.rotation.y += dt * 0.4;
+      }
+      if (this.dustPts) Assets.updateDust(this.dustPts, dt);
+
+      // One-time toast near the stable
+      if (!this.stableToastShown && p.position.distanceTo(this.stable.position) < 5) {
+        this.stableToastShown = true;
+        AudioEngine.shimmer();
+        UI.toast('The stable stands ready &mdash; Scene 4, the manger, will unfold here.', 4200);
+      }
+
+      // Interaction proximity
+      const near = p.position.distanceTo(this.well.position) < 2.2;
+      if (near !== this.nearWell) {
+        this.nearWell = near;
+        if (near) UI.show('interactBtn'); else UI.hide('interactBtn');
+      }
+      if (near && Input.consumeInteract()) this.interactWell();
+      else Input.consumeInteract();
+    },
+
+    interactWell() {
+      AudioEngine.bell(660);
+      UI.toast('&ldquo;Whoever drinks of the water that I will give him will never thirst again.&rdquo;<br><em>&mdash; John 4:14 (WEB)</em>', 4600);
+    },
+
+    dispose() {}
+  };
+
+  /* =====================================================
+     Scene 1 — The Annunciation (Luke 1:26-38)
+  ===================================================== */
+  const Scene1 = {
+    label: 'Scene 1 — The Annunciation',
+    player: null, gabriel: null, lampLight: null, divineLight: null, scroll: null,
+    interactables: [], nearest: null, explored: 0, phase: 'explore', time: 0,
+
+    build() {
+      const s = Game.scene;
+      while (s.children.length) s.remove(s.children[0]);
+      s.background = new THREE.Color(0x1a2238);
+      s.fog = null;
+
+      s.add(new THREE.AmbientLight(0xffdcb0, 0.32));
+      const moon = new THREE.DirectionalLight(0x8fa3c8, 0.25);
+      moon.position.set(4, 8, 2);
+      s.add(moon);
+
+      // Room: stone-mud walls, floor, ceiling, doorway, window
+      const wallMat = new THREE.MeshLambertMaterial({ color: 0xb09c78 });
+      const floor = new THREE.Mesh(new THREE.PlaneGeometry(7, 7),
+        new THREE.MeshLambertMaterial({ color: 0x9c8a68 }));
+      floor.rotation.x = -Math.PI / 2;
+      s.add(floor);
+      const mkWall = (w, h, d, x, y, z) => {
+        const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), wallMat);
+        m.position.set(x, y, z);
+        s.add(m);
+      };
+      mkWall(7, 2.8, 0.25, 0, 1.4, -3.5);      // back
+      mkWall(0.25, 2.8, 7, -3.5, 1.4, 0);      // left
+      mkWall(0.25, 2.8, 7, 3.5, 1.4, 0);       // right
+      mkWall(2.6, 2.8, 0.25, -2.2, 1.4, 3.5);  // front, left of doorway
+      mkWall(2.6, 2.8, 0.25, 2.2, 1.4, 3.5);   // front, right of doorway
+      mkWall(1.8, 0.9, 0.25, 0, 2.35, 3.5);    // lintel
+      const ceil = new THREE.Mesh(new THREE.BoxGeometry(7, 0.2, 7),
+        new THREE.MeshLambertMaterial({ color: 0x6e5c42 }));
+      ceil.position.y = 2.9;
+      s.add(ceil);
+      const win = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.9, 0.1),
+        new THREE.MeshBasicMaterial({ color: 0x27324f }));
+      win.position.set(1.6, 1.6, -3.42);
+      s.add(win);
+
+      // Props
+      const table = Assets.table(); table.position.set(-1.8, 0, -2.2); s.add(table);
+      const lamp = Assets.lamp(); lamp.position.set(-1.8, 0.78, -2.0); s.add(lamp);
+      this.lampLight = lamp.userData.light;
+      const jar = Assets.jar(); jar.position.set(2.6, 0, -2.6); s.add(jar);
+      const spindle = Assets.spindle(); spindle.position.set(2.4, 0, 1.8); s.add(spindle);
+      const bowl = Assets.bowl(); bowl.position.set(-1.5, 0.78, -2.4); s.add(bowl);
+      const rug = Assets.rug(); rug.position.set(0.6, 0.02, 0.4); s.add(rug);
+      this.scroll = Assets.scroll(); this.scroll.position.set(-2.3, 0.86, -2.2); s.add(this.scroll);
+
+      // Player: Mary
+      this.player = Assets.person({ robe: 0x7a8db0, sash: 0xdfe6ef });
+      this.player.position.set(0.5, 0, 2);
+      s.add(this.player);
+
+      this.interactables = [
+        { obj: jar, r: 1.3, msg: 'Water drawn fresh from the well of Nazareth this morning.' },
+        { obj: spindle, r: 1.3, msg: 'The spindle rests from the day&rsquo;s work &mdash; a quiet life of humble faithfulness.' },
+        { obj: bowl, r: 1.6, msg: 'Barley loaves for the evening meal.' },
+        { obj: this.scroll, r: 1.6, fragment: true }
+      ];
+      this.nearest = null; this.explored = 0;
+      this.phase = 'explore'; this.time = 0;
+      this.gabriel = null; this.divineLight = null;
+
+      Controller.reset(0, 0.3);
+      UI.setHint(Input.isTouchDevice
+        ? 'Left side: move  ·  Right side: look'
+        : 'WASD move · drag mouse to look · E interact · Esc menu');
+      UI.setObjective('&#10022; Explore your home (interact with 2 objects)');
+
+      setTimeout(() => {
+        DialogueSystem.start({
+          n1: {
+            who: 'Narrator',
+            text: 'In the sixth month, the angel Gabriel was sent from God to a city of Galilee named Nazareth, to a virgin pledged to be married to a man whose name was Joseph, of David’s house. The virgin’s name was Mary. (Luke 1:26-27, WEB)',
+            end: true
+          }
+        }, 'n1');
+      }, 900);
+    },
+
+    triggerAngel() {
+      this.phase = 'angel';
+      AudioEngine.shimmer();
+      UI.setObjective('&#10022; Be still &mdash; a light fills the room');
+      this.gabriel = Assets.person({ robe: 0xf7f2e2, head: 0xe9dcc0, sash: 0xe8c56a });
+      this.gabriel.scale.setScalar(1.18);
+      this.gabriel.position.set(-0.6, 0.06, -1.2);
+      this.gabriel.rotation.y = Math.PI * 0.85;
+      this.gabriel.traverse(o => {
+        if (o.isMesh) {
+          o.material = o.material.clone();
+          o.material.emissive = new THREE.Color(0x4a3d14);
+        }
+      });
+      Game.scene.add(this.gabriel);
+      this.divineLight = new THREE.PointLight(0xfff3cf, 0, 12);
+      this.divineLight.position.set(-0.6, 1.9, -1.2);
+      Game.scene.add(this.divineLight);
+      setTimeout(() => this.startAnnunciation(), 1800);
+    },
+
+    startAnnunciation() {
+      const script = {
+        g1: { who: 'Gabriel', text: '“Rejoice, you highly favored one! The Lord is with you. Blessed are you among women!” (Luke 1:28)', next: 'g2' },
+        g2: {
+          who: 'Narrator',
+          text: 'Mary was greatly troubled at the saying, and considered what kind of salutation this might be.',
+          choices: [
+            { label: 'Be still, and listen in faith', blessing: true, next: 'g3' },
+            { label: 'Shrink back in fear', next: 'g2b' }
+          ]
+        },
+        g2b: { who: 'Gabriel', text: '“Don’t be afraid, Mary, for you have found favor with God.” (Luke 1:30)', next: 'g3' },
+        g3: {
+          who: 'Gabriel',
+          text: '“Behold, you will conceive in your womb and give birth to a son, and shall name him ‘Jesus.’ He will be great and will be called the Son of the Most High. The Lord God will give him the throne of his father David, and he will reign over the house of Jacob forever. There will be no end to his Kingdom.” (Luke 1:31-33)',
+          choices: [
+            { label: '“How can this be, seeing I am a virgin?”', blessing: true, next: 'g4' },
+            { label: '“Surely such a thing is impossible.”', next: 'g3b' }
+          ]
+        },
+        g3b: { who: 'Gabriel', text: '“Is anything too hard for the Lord? Listen, and see what God will do.”', next: 'g4' },
+        g4: {
+          who: 'Gabriel',
+          text: '“The Holy Spirit will come on you, and the power of the Most High will overshadow you. Therefore also the holy one who is born from you will be called the Son of God… For nothing spoken by God is impossible.” (Luke 1:35, 37)',
+          choices: [
+            { label: '“Behold, the servant of the Lord; let it be done to me according to your word.”', blessing: true, next: 'g5' },
+            { label: 'Ponder these things a moment longer', next: 'g4b' }
+          ]
+        },
+        g4b: { who: 'Narrator', text: 'Mary kept all these words, pondering them in her heart. The angel waited, patient in glory.', next: 'g4' },
+        g5: {
+          who: 'Mary',
+          text: '“My soul magnifies the Lord. My spirit has rejoiced in God my Savior!” (Luke 1:46-47)',
+          end: true,
+          action: () => { this.phase = 'glory'; AudioEngine.magnificat(); }
+        }
+      };
+      DialogueSystem.start(script, 'g1', () => this.complete());
+    },
+
+    complete() {
+      UI.setObjective('');
+      Game.showComplete(
+        'Scene 1 Complete &mdash; The Annunciation',
+        'Mary believed the word of the Lord.<br><br>' +
+        'Blessings of faith: <b>' + Game.blessing + '</b><br>' +
+        'Scripture fragments: <b>' + Game.fragments.length + '</b><br><br>' +
+        '<em>&ldquo;My soul magnifies the Lord.&rdquo;</em>',
+        'scene2'
+      );
+    },
+
+    update(dt) {
+      this.time += dt;
+      if (this.lampLight)
+        this.lampLight.intensity = 0.8 + Math.sin(this.time * 11) * 0.12 + Math.random() * 0.06;
+      if (this.scroll && !this.scroll.userData.taken)
+        this.scroll.rotation.y += dt * 1.2;
+      if (this.divineLight) {
+        const target = this.phase === 'glory' ? 2.8 : 1.2;
+        this.divineLight.intensity += (target - this.divineLight.intensity) * dt * 1.5;
+      }
+      if (this.gabriel)
+        this.gabriel.position.y = 0.06 + Math.sin(this.time * 1.6) * 0.05;
+
+      if (Game.dialogueActive) return;
+
+      Controller.update(this.player, dt, {
+        speed: 2.4, camDist: 3.8, camHeight: 1.7, maxPitch: 0.75,
+        clamp: pos => {
+          pos.x = Math.max(-2.9, Math.min(2.9, pos.x));
+          pos.z = Math.max(-2.9, Math.min(2.9, pos.z));
+        }
+      });
+
+      // Interactions
+      let near = null;
+      for (const it of this.interactables) {
+        if (it.used) continue;
+        if (this.player.position.distanceTo(it.obj.position) < it.r) { near = it; break; }
+      }
+      if (near !== this.nearest) {
+        this.nearest = near;
+        if (near) UI.show('interactBtn'); else UI.hide('interactBtn');
+      }
+      if (Input.consumeInteract() && near) {
+        near.used = true;
+        this.nearest = null;
+        UI.hide('interactBtn');
+        if (near.fragment) {
+          this.scroll.userData.taken = true;
+          Game.scene.remove(this.scroll);
+          Game.addFragment('Isaiah 7:14',
+            '&ldquo;Therefore the Lord himself will give you a sign. Behold, the virgin will conceive, and bear a son, and shall call his name Immanuel.&rdquo; (WEB)');
+        } else {
+          AudioEngine.bell(760);
+          UI.toast(near.msg, 3400);
+        }
+        this.explored++;
+        if (this.phase === 'explore' && this.explored >= 2) {
+          this.phase = 'cue';
+          UI.setObjective('');
+          setTimeout(() => this.triggerAngel(), 1400);
+        }
+      }
+    },
+
+    dispose() {}
+  };
+
+  /* =====================================================
+     Scene 2 — Joseph's Dream (Matthew 1:18-25)
+  ===================================================== */
+  const Scene2 = {
+    label: 'Scene 2 — Joseph’s Dream',
+    player: null, bench: null, plane: null, mat: null, benchScroll: null,
+    angel: null, divineLight: null, mary: null, sawdust: null, lampLight: null,
+    phase: 'work', strokes: 0, time: 0, nearest: null,
+    thoughts: [
+      'Mary is with child… and I am not the father.',
+      'The law permits public disgrace… but I love her.',
+      'A righteous man must do what is right — but what is right?',
+      'I will not shame her before Israel.'
+    ],
+
+    build() {
+      const s = Game.scene;
+      while (s.children.length) s.remove(s.children[0]);
+      s.background = new THREE.Color(0x141a2c);
+      s.fog = null;
+
+      s.add(new THREE.AmbientLight(0xffe2b8, 0.3));
+      const moon = new THREE.DirectionalLight(0x93a7cc, 0.3);
+      moon.position.set(-4, 8, 3);
+      s.add(moon);
+
+      // Workshop room
+      const wallMat = new THREE.MeshLambertMaterial({ color: 0xa08a66 });
+      const floor = new THREE.Mesh(new THREE.PlaneGeometry(8, 8),
+        new THREE.MeshLambertMaterial({ color: 0x8f7c5c }));
+      floor.rotation.x = -Math.PI / 2;
+      s.add(floor);
+      const mkWall = (w, h, d, x, y, z) => {
+        const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), wallMat);
+        m.position.set(x, y, z);
+        s.add(m);
+      };
+      mkWall(8, 2.8, 0.25, 0, 1.4, -4);
+      mkWall(0.25, 2.8, 8, -4, 1.4, 0);
+      mkWall(0.25, 2.8, 8, 4, 1.4, 0);
+      mkWall(3, 2.8, 0.25, -2.5, 1.4, 4);
+      mkWall(3, 2.8, 0.25, 2.5, 1.4, 4);
+      mkWall(2, 0.9, 0.25, 0, 2.35, 4);
+      const ceil = new THREE.Mesh(new THREE.BoxGeometry(8, 0.2, 8),
+        new THREE.MeshLambertMaterial({ color: 0x6e5c42 }));
+      ceil.position.y = 2.9;
+      s.add(ceil);
+      const win = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.9, 0.1),
+        new THREE.MeshBasicMaterial({ color: 0x1c2745 }));
+      win.position.set(-1.8, 1.7, -3.92);
+      s.add(win);
+
+      // Workbench, beam, hand plane
+      this.bench = Assets.table();
+      this.bench.scale.set(1.5, 1.1, 1.3);
+      this.bench.position.set(1.8, 0, -2.8);
+      s.add(this.bench);
+      const beam = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.14, 0.2),
+        new THREE.MeshLambertMaterial({ color: 0xb98f5a }));
+      beam.position.set(1.8, 0.92, -2.8);
+      s.add(beam);
+      this.plane = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.12, 0.14),
+        new THREE.MeshLambertMaterial({ color: 0x6b4a2f }));
+      this.plane.position.set(1.2, 1.03, -2.8);
+      s.add(this.plane);
+
+      // Wall tools, lamp, sleeping mat, genealogy scroll (hidden until dream ends)
+      for (let i = 0; i < 4; i++) {
+        const tool = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.5, 0.06),
+          new THREE.MeshLambertMaterial({ color: 0x5d452c }));
+        tool.position.set(-3.2 + i * 0.5, 1.6, -3.85);
+        s.add(tool);
+      }
+      const lamp = Assets.lamp();
+      lamp.position.set(3.4, 0, -3.4);
+      s.add(lamp);
+      this.lampLight = lamp.userData.light;
+      this.mat = Assets.rug();
+      this.mat.position.set(-2.6, 0.02, 2.4);
+      s.add(this.mat);
+      this.benchScroll = Assets.scroll();
+      this.benchScroll.position.set(2.6, 0.95, -2.8);
+      this.benchScroll.visible = false;
+      s.add(this.benchScroll);
+
+      this.sawdust = Assets.dust(30, 7, 0xd9c9a3);
+      s.add(this.sawdust);
+
+      // Player: Joseph
+      this.player = Assets.person({ robe: 0x8a6f4d, sash: 0x6e5a3a });
+      this.player.position.set(0, 0, 1.5);
+      s.add(this.player);
+
+      this.phase = 'work'; this.strokes = 0; this.time = 0; this.nearest = null;
+      this.angel = null; this.divineLight = null; this.mary = null;
+
+      Controller.reset(0, 0.3);
+      UI.setObjective('&#10022; Plane the beam at the workbench (5 strokes)');
+
+      setTimeout(() => {
+        DialogueSystem.start({
+          n1: {
+            who: 'Narrator',
+            text: 'Now the birth of Jesus Christ was like this: after his mother, Mary, was engaged to Joseph, before they came together, she was found pregnant by the Holy Spirit. (Matthew 1:18, WEB)',
+            end: true
+          }
+        }, 'n1');
+      }, 900);
+    },
+
+    doStroke() {
+      this.strokes++;
+      AudioEngine.scrape();
+      this.plane.position.x = 1.2 + (this.strokes % 2) * 1.1;
+      if (this.strokes < 5) {
+        UI.toast('<em>' + this.thoughts[this.strokes - 1] + '</em>', 2800);
+        UI.setObjective('&#10022; Plane the beam (' + this.strokes + '/5 strokes)');
+      } else {
+        UI.setObjective('');
+        UI.hide('interactBtn');
+        this.nearest = null;
+        setTimeout(() => this.decisionDialogue(), 600);
+      }
+    },
+
+    decisionDialogue() {
+      DialogueSystem.start({
+        d1: {
+          who: 'Narrator',
+          text: 'Joseph, her husband, being a righteous man, and not willing to make her a public example, intended to put her away secretly. (Matthew 1:19)',
+          choices: [
+            { label: 'Choose mercy — spare her public shame', blessing: true, next: 'd2' },
+            { label: 'Demand the full penalty of the law', next: 'd1b' }
+          ]
+        },
+        d1b: { who: 'Narrator', text: 'Joseph’s hands tremble on the plane. The law is heavy — but mercy weighs heavier on his heart. He resolves not to shame her.', next: 'd2' },
+        d2: { who: 'Narrator', text: 'Weary in body and soul, Joseph turns toward his sleeping mat. Night deepens over Nazareth.', end: true }
+      }, 'd1', () => {
+        this.phase = 'rest';
+        UI.setObjective('&#10022; Rest on the sleeping mat');
+      });
+    },
+
+    startDream() {
+      this.phase = 'dream';
+      UI.fade(true);
+      setTimeout(() => {
+        Game.scene.background = new THREE.Color(0x2c3654);
+        Game.scene.fog = new THREE.Fog(0x2c3654, 4, 14);
+        this.angel = Assets.person({ robe: 0xf7f2e2, head: 0xe9dcc0, sash: 0xe8c56a });
+        this.angel.scale.setScalar(1.25);
+        this.angel.position.set(0, 0.1, -1.5);
+        this.angel.rotation.y = Math.PI;
+        this.angel.traverse(o => {
+          if (o.isMesh) { o.material = o.material.clone(); o.material.emissive = new THREE.Color(0x4a3d14); }
+        });
+        Game.scene.add(this.angel);
+        this.divineLight = new THREE.PointLight(0xfff3cf, 0.2, 12);
+        this.divineLight.position.set(0, 2, -1.5);
+        Game.scene.add(this.divineLight);
+        AudioEngine.shimmer();
+        UI.fade(false);
+        setTimeout(() => this.dreamDialogue(), 1200);
+      }, 900);
+    },
+
+    dreamDialogue() {
+      DialogueSystem.start({
+        a1: { who: 'Angel of the Lord', text: '“Joseph, son of David, don’t be afraid to take to yourself Mary as your wife, for that which is conceived in her is of the Holy Spirit.” (Matthew 1:20)', next: 'a2' },
+        a2: { who: 'Angel of the Lord', text: '“She shall give birth to a son. You shall name him JESUS, for it is he who shall save his people from their sins.” (Matthew 1:21)', next: 'a3' },
+        a3: {
+          who: 'Narrator',
+          text: '“Behold, the virgin shall be with child, and shall give birth to a son. They shall call his name Immanuel” — which is, being interpreted, “God with us.” (Matthew 1:23)',
+          choices: [
+            { label: 'Wake, and obey at once', blessing: true, next: 'a4' },
+            { label: 'Linger in the dream', next: 'a3b' }
+          ]
+        },
+        a3b: { who: 'Narrator', text: 'The morning light calls. Obedience does not wait.', next: 'a4' },
+        a4: { who: 'Narrator', text: 'Joseph arose from his sleep and did as the angel of the Lord commanded him. (Matthew 1:24)', end: true }
+      }, 'a1', () => this.endDream());
+    },
+
+    endDream() {
+      UI.fade(true);
+      setTimeout(() => {
+        Game.scene.background = new THREE.Color(0x2a3350);
+        Game.scene.fog = null;
+        if (this.angel) Game.scene.remove(this.angel);
+        if (this.divineLight) Game.scene.remove(this.divineLight);
+        this.angel = null; this.divineLight = null;
+        this.benchScroll.visible = true;
+        this.phase = 'scroll';
+        UI.fade(false);
+        UI.setObjective('&#10022; Study the genealogy scroll on the bench');
+      }, 900);
+    },
+
+    scrollPuzzle() {
+      DialogueSystem.start({
+        p0: {
+          who: 'Genealogy Scroll',
+          text: 'Align the line of promise. With whom did the covenant begin?',
+          choices: [
+            { label: 'Abraham', next: 'p1' },
+            { label: 'David', next: 'r1' },
+            { label: 'Joseph', next: 'r1' }
+          ]
+        },
+        r1: { who: 'Genealogy Scroll', text: 'Recall — the promise began with one man called out of Ur, that in him all the families of the earth would be blessed.', next: 'p0' },
+        p1: {
+          who: 'Genealogy Scroll',
+          text: 'Through whom did the royal throne come?',
+          choices: [
+            { label: 'David', next: 'p2' },
+            { label: 'Abraham', next: 'r2' },
+            { label: 'Joseph', next: 'r2' }
+          ]
+        },
+        r2: { who: 'Genealogy Scroll', text: 'Think of the shepherd-king of Bethlehem, to whom an everlasting throne was promised.', next: 'p1' },
+        p2: {
+          who: 'Genealogy Scroll',
+          text: 'And of whose line is the carpenter of Nazareth?',
+          choices: [
+            { label: 'Joseph', next: 'p3' },
+            { label: 'David', next: 'r3' }
+          ]
+        },
+        r3: { who: 'Genealogy Scroll', text: 'The scroll ends at your own name, son of David.', next: 'p2' },
+        p3: {
+          who: 'Genealogy Scroll',
+          text: 'Abraham → David → Joseph. The line of promise is unbroken — the Messiah comes exactly as it was written.',
+          end: true,
+          action: () => Game.addFragment('Matthew 1:1',
+            '&ldquo;The book of the genealogy of Jesus Christ, the son of David, the son of Abraham.&rdquo; (WEB)')
+        }
+      }, 'p0', () => this.homecoming());
+    },
+
+    homecoming() {
+      this.mary = Assets.person({ robe: 0x7a8db0, sash: 0xdfe6ef });
+      this.mary.position.set(0.4, 0, 3.2);
+      this.mary.rotation.y = Math.PI;
+      Game.scene.add(this.mary);
+      AudioEngine.bell(880);
+      DialogueSystem.start({
+        h1: { who: 'Narrator', text: 'And Joseph took his wife to himself. Warmth returns to the little house in Nazareth — faith has chosen obedience over fear. (Matthew 1:24-25)', end: true }
+      }, 'h1', () => {
+        Game.showComplete(
+          'Scene 2 Complete &mdash; Joseph&rsquo;s Dream',
+          'Joseph chose obedience to God over cultural shame.<br><br>' +
+          'Blessings of faith: <b>' + Game.blessing + '</b><br>' +
+          'Scripture fragments: <b>' + Game.fragments.length + '</b>',
+          'scene3'
+        );
+      });
+    },
+
+    update(dt) {
+      this.time += dt;
+      if (this.lampLight)
+        this.lampLight.intensity = 0.8 + Math.sin(this.time * 11) * 0.12 + Math.random() * 0.06;
+      if (this.sawdust) Assets.updateDust(this.sawdust, dt);
+      if (this.divineLight && this.divineLight.intensity < 1.4)
+        this.divineLight.intensity += dt * 0.7;
+      if (this.angel) this.angel.position.y = 0.1 + Math.sin(this.time * 1.6) * 0.05;
+      if (this.benchScroll.visible) this.benchScroll.rotation.y += dt * 1.2;
+
+      if (Game.dialogueActive) return;
+
+      Controller.update(this.player, dt, {
+        speed: 2.4, camDist: 3.8, camHeight: 1.7, maxPitch: 0.75,
+        clamp: pos => {
+          pos.x = Math.max(-3.4, Math.min(3.4, pos.x));
+          pos.z = Math.max(-3.2, Math.min(3.4, pos.z));
+        }
+      });
+
+      let near = null;
+      if (this.phase === 'work' && this.player.position.distanceTo(this.bench.position) < 2.0) near = 'bench';
+      else if (this.phase === 'rest' && this.player.position.distanceTo(this.mat.position) < 1.6) near = 'mat';
+      else if (this.phase === 'scroll' && this.player.position.distanceTo(this.benchScroll.position) < 2.2) near = 'scroll';
+
+      if (near !== this.nearest) {
+        this.nearest = near;
+        if (near) UI.show('interactBtn'); else UI.hide('interactBtn');
+      }
+      if (Input.consumeInteract() && near) {
+        if (near === 'bench') this.doStroke();
+        else if (near === 'mat') { UI.hide('interactBtn'); this.nearest = null; this.startDream(); }
+        else if (near === 'scroll') { UI.hide('interactBtn'); this.nearest = null; this.scrollPuzzle(); }
+      }
+    },
+
+    dispose() {}
+  };
+
+  /* =====================================================
+     Scene 3 — The Journey to Bethlehem (Luke 2:1-5)
+  ===================================================== */
+  const Scene3 = {
+    label: 'Scene 3 — The Journey to Bethlehem',
+    player: null, donkeyG: null, traveler: null, soldier: null, innkeeper: null,
+    scrollProp: null, wellProp: null, rainPts: null,
+    jackals: [], jackalHits: 0, blocked: false, fleeing: false, fleeTime: 0,
+    food: 100, water: 100, time: 0, nearest: null, raining: false,
+    events: [], interactables: [],
+
+    build() {
+      const s = Game.scene;
+      while (s.children.length) s.remove(s.children[0]);
+      s.background = new THREE.Color(0x87a5c4);
+      s.fog = new THREE.Fog(0x87a5c4, 30, 70);
+
+      s.add(new THREE.AmbientLight(0xfff2dd, 0.5));
+      const sun = new THREE.DirectionalLight(0xffe9c4, 0.85);
+      sun.position.set(10, 16, 4);
+      s.add(sun);
+
+      // Long road south
+      const ground = new THREE.Mesh(new THREE.PlaneGeometry(70, 300),
+        new THREE.MeshLambertMaterial({ map: Assets.groundTexture() }));
+      ground.rotation.x = -Math.PI / 2;
+      ground.position.z = -110;
+      s.add(ground);
+      const road = new THREE.Mesh(new THREE.PlaneGeometry(3.4, 300),
+        new THREE.MeshLambertMaterial({ color: 0x97865f }));
+      road.rotation.x = -Math.PI / 2;
+      road.position.set(0, 0.01, -110);
+      s.add(road);
+
+      for (let i = 0; i < 26; i++) {
+        const hill = new THREE.Mesh(new THREE.IcosahedronGeometry(4 + Math.random() * 5, 0),
+          new THREE.MeshLambertMaterial({ color: 0x9d8b60, flatShading: true }));
+        const side = Math.random() < 0.5 ? -1 : 1;
+        hill.position.set(side * (14 + Math.random() * 14), -1.5, 15 - Math.random() * 250);
+        hill.scale.y = 0.45;
+        s.add(hill);
+      }
+      for (let i = 0; i < 22; i++) {
+        const t = Assets.tree();
+        const side = Math.random() < 0.5 ? -1 : 1;
+        t.position.set(side * (5 + Math.random() * 9), 0, 10 - Math.random() * 245);
+        s.add(t);
+      }
+      for (let i = 0; i < 14; i++) {
+        const r = Assets.rock();
+        r.position.set((Math.random() - 0.5) * 16, 0.2, 5 - Math.random() * 235);
+        s.add(r);
+      }
+
+      // Fellow traveler
+      this.traveler = Assets.person({ robe: 0x9c8a68, sash: 0x7d6a4a });
+      this.traveler.position.set(2.6, 0, -16);
+      this.traveler.rotation.y = -0.7;
+      s.add(this.traveler);
+
+      // Jackals (hidden until the event)
+      this.jackals = [];
+      for (let i = 0; i < 2; i++) {
+        const j = Assets.jackal();
+        j.position.set(-1 + i * 2, 0, -39);
+        j.rotation.y = Math.PI * (0.4 + 0.2 * i);
+        j.visible = false;
+        s.add(j);
+        this.jackals.push(j);
+      }
+
+      // Micah scroll at a lookout, and a well
+      this.scrollProp = Assets.scroll();
+      this.scrollProp.position.set(3, 0.3, -50);
+      s.add(this.scrollProp);
+      this.wellProp = Assets.well();
+      this.wellProp.position.set(-3, 0, -62);
+      s.add(this.wellProp);
+
+      // Roman checkpoint
+      const postMat = new THREE.MeshLambertMaterial({ color: 0x6b4a2f });
+      [-2.2, 2.2].forEach(x => {
+        const p = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.12, 2.6, 6), postMat);
+        p.position.set(x, 1.3, -76);
+        s.add(p);
+      });
+      const bar = new THREE.Mesh(new THREE.BoxGeometry(4.6, 0.12, 0.12), postMat);
+      bar.position.set(0, 2.5, -76);
+      s.add(bar);
+      const banner = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.8, 0.05),
+        new THREE.MeshLambertMaterial({ color: 0x8e2f2f }));
+      banner.position.set(0, 2, -76);
+      s.add(banner);
+      this.soldier = Assets.person({ robe: 0x8e3d3d, sash: 0xb5a17e });
+      this.soldier.position.set(1.4, 0, -75);
+      this.soldier.rotation.y = 0.4;
+      s.add(this.soldier);
+
+      // Bethlehem gate and houses
+      const towerMat = new THREE.MeshLambertMaterial({ color: 0xcbb894 });
+      [-3.6, 3.6].forEach(x => {
+        const tw = new THREE.Mesh(new THREE.BoxGeometry(2.2, 4.2, 2.2), towerMat);
+        tw.position.set(x, 2.1, -117);
+        s.add(tw);
+      });
+      const arch = new THREE.Mesh(new THREE.BoxGeometry(5, 1, 2.2), towerMat);
+      arch.position.set(0, 3.6, -117);
+      s.add(arch);
+      for (let i = 0; i < 4; i++) {
+        const h = Assets.house();
+        h.position.set((i % 2 ? -6 : 6) + (Math.random() - 0.5) * 2, 0, -121 - i * 3);
+        h.rotation.y = Math.random();
+        s.add(h);
+      }
+      this.innkeeper = Assets.person({ robe: 0x7d5a3a, sash: 0xc2a36b });
+      this.innkeeper.position.set(1.2, 0, -119);
+      this.innkeeper.rotation.y = Math.PI;
+      s.add(this.innkeeper);
+
+      // Rain particles (hidden until checkpoint)
+      this.rainPts = Assets.dust(240, 30, 0xaebfd4);
+      this.rainPts.material.size = 0.05;
+      this.rainPts.visible = false;
+      s.add(this.rainPts);
+
+      // Player: Joseph leading the donkey carrying Mary
+      this.player = Assets.person({ robe: 0x8a6f4d, sash: 0x6e5a3a });
+      this.player.position.set(0, 0, 6);
+      this.player.rotation.y = Math.PI;
+      s.add(this.player);
+      this.donkeyG = new THREE.Group();
+      const donkey = Assets.donkey();
+      this.donkeyG.add(donkey);
+      const mary = Assets.person({ robe: 0x7a8db0, sash: 0xdfe6ef });
+      mary.scale.setScalar(0.85);
+      mary.position.set(-0.05, 0.62, 0);
+      this.donkeyG.add(mary);
+      this.donkeyG.position.set(0.8, 0, 7.5);
+      s.add(this.donkeyG);
+
+      this.food = 100; this.water = 100; this.time = 0; this.nearest = null;
+      this.raining = false; this.blocked = false; this.fleeing = false;
+      this.jackalHits = 0; this.fleeTime = 0; this.clopT = 0;
+
+      this.events = [
+        { z: -14, id: 'traveler', done: false },
+        { z: -35, id: 'jackals', done: false },
+        { z: -74, id: 'checkpoint', done: false },
+        { z: -95, id: 'mary', done: false },
+        { z: -114, id: 'gate', done: false }
+      ];
+      this.interactables = [
+        { obj: this.scrollProp, r: 1.9, id: 'scroll' },
+        { obj: this.wellProp, r: 2.3, id: 'well' }
+      ];
+
+      Controller.reset(0, 0.35);
+      UI.show('meters');
+      UI.setObjective('&#10022; Follow the road south to Bethlehem');
+
+      setTimeout(() => {
+        DialogueSystem.start({
+          n1: { who: 'Narrator', text: 'In those days, a decree went out from Caesar Augustus that all the world should be enrolled… Joseph also went up from Galilee, out of the city of Nazareth, into Judea, to David’s city, which is called Bethlehem, because he was of the house and family of David. (Luke 2:1, 4, WEB)', next: 'n2' },
+          n2: { who: 'Narrator', text: 'He went to enroll himself with Mary, who was pledged to be married to him as wife, being great with child. (Luke 2:5)', end: true }
+        }, 'n1');
+      }, 900);
+    },
+
+    ev_traveler() {
+      DialogueSystem.start({
+        t1: {
+          who: 'Narrator',
+          text: 'A traveler lies weary beside the road, his waterskin empty.',
+          choices: [
+            {
+              label: 'Share your water',
+              blessing: true,
+              next: 't2',
+              // water cost applied in the node action below
+            },
+            { label: 'Press on — the road is long', next: 't2b' }
+          ]
+        },
+        t2: {
+          who: 'Traveler',
+          text: '“May the God of Israel bless your road, friend.”',
+          end: true,
+          action: () => { this.water = Math.max(0, this.water - 15); }
+        },
+        t2b: { who: 'Narrator', text: 'The traveler watches you pass. The road feels longer.', end: true }
+      }, 't1');
+    },
+
+    ev_jackals() {
+      this.blocked = true;
+      this.jackalHits = 0;
+      this.jackals.forEach(j => j.visible = true);
+      AudioEngine.drone();
+      UI.setObjective('&#10022; Jackals block the road! Drive them off (Interact 3&times;)');
+    },
+
+    jackalHit() {
+      this.jackalHits++;
+      AudioEngine.footstep();
+      this.jackals.forEach(j => { j.position.z -= 0.7; });
+      if (this.jackalHits >= 3) {
+        this.blocked = false;
+        this.fleeing = true;
+        this.fleeTime = 0;
+        AudioEngine.bell(700);
+        UI.setObjective('&#10022; Follow the road south to Bethlehem');
+        UI.toast('The jackals flee into the hills. The road is clear.', 2800);
+      } else {
+        AudioEngine.drone(0.9);
+      }
+    },
+
+    ev_checkpoint() {
+      DialogueSystem.start({
+        s1: {
+          who: 'Roman Soldier',
+          text: '“Halt! Census papers, by order of Caesar Augustus.”',
+          choices: [
+            { label: 'Present the papers calmly', blessing: true, next: 's2' },
+            { label: 'Protest the tax', next: 's1b' }
+          ]
+        },
+        s1b: { who: 'Roman Soldier', text: '“Rome does not ask twice, carpenter.” Joseph hands over the papers.', next: 's2' },
+        s2: {
+          who: 'Narrator',
+          text: '“Move along.” Clouds gather over the Judean hills, and rain begins to fall on the road south.',
+          end: true,
+          action: () => {
+            this.raining = true;
+            this.rainPts.visible = true;
+            AudioEngine.rainStart();
+          }
+        }
+      }, 's1');
+    },
+
+    ev_mary() {
+      DialogueSystem.start({
+        m1: {
+          who: 'Mary',
+          text: '“Joseph… the child stirs. Do you remember the word of the prophet?”',
+          choices: [
+            { label: '“Out of Bethlehem shall come a ruler. God’s word stands.”', blessing: true, next: 'm2' },
+            { label: '“Rest now — we are nearly there.”', next: 'm2' }
+          ]
+        },
+        m2: { who: 'Narrator', text: 'And they spoke softly of the promises of God as the last miles passed beneath their feet.', end: true }
+      }, 'm1');
+    },
+
+    ev_gate() {
+      DialogueSystem.start({
+        i1: {
+          who: 'Innkeeper',
+          text: '“No room! Every bed in Bethlehem is taken for the census.”',
+          choices: [
+            { label: '“Please — my wife is with child.”', next: 'i2' },
+            { label: '“We will pay whatever you ask.”', next: 'i2b' }
+          ]
+        },
+        i2: { who: 'Innkeeper', text: '“…There is a stable, out back among the animals. Warm straw, at least. It is all I have.”', next: 'i3' },
+        i2b: { who: 'Innkeeper', text: '“It is not silver we lack, but room. …There is a stable, if you will have it.”', next: 'i3' },
+        i3: { who: 'Narrator', text: 'And so it was that while they were there, the day had come for her to give birth. (Luke 2:6)', end: true }
+      }, 'i1', () => {
+        Game.showComplete(
+          'Scene 3 Complete &mdash; The Journey to Bethlehem',
+          'Through weariness and rain, God led them to David&rsquo;s city.<br><br>' +
+          'Blessings of faith: <b>' + Game.blessing + '</b><br>' +
+          'Scripture fragments: <b>' + Game.fragments.length + '</b>',
+          'scene4'
+        );
+      });
+    },
+
+    update(dt) {
+      this.time += dt;
+
+      // Day → dusk → night sky as the road progresses
+      const prog = Math.min(1, Math.max(0, (6 - this.player.position.z) / 126));
+      const day = new THREE.Color(0x87a5c4), dusk = new THREE.Color(0xc98d5e), night = new THREE.Color(0x232c47);
+      const c = prog < 0.5 ? day.clone().lerp(dusk, prog * 2) : dusk.clone().lerp(night, (prog - 0.5) * 2);
+      if (this.raining) c.multiplyScalar(0.8);
+      Game.scene.background = c;
+      if (Game.scene.fog) Game.scene.fog.color.copy(c);
+
+      // Rain falls around the caravan
+      if (this.raining) {
+        this.rainPts.position.x = this.player.position.x;
+        this.rainPts.position.z = this.player.position.z;
+        const pos = this.rainPts.geometry.attributes.position;
+        for (let i = 0; i < pos.count; i++) {
+          let y = pos.getY(i) - dt * 13;
+          if (y < 0) y = 7 + Math.random() * 2;
+          pos.setY(i, y);
+        }
+        pos.needsUpdate = true;
+      }
+
+      // Fleeing jackals
+      if (this.fleeing) {
+        this.fleeTime += dt;
+        this.jackals.forEach((j, i) => { j.position.x += dt * 6 * (i ? 1 : -1); });
+        if (this.fleeTime > 1.6) {
+          this.fleeing = false;
+          this.jackals.forEach(j => j.visible = false);
+        }
+      }
+
+      // Donkey (with Mary) follows Joseph
+      const dir = new THREE.Vector3(Math.sin(this.player.rotation.y), 0, Math.cos(this.player.rotation.y));
+      const target = this.player.position.clone().addScaledVector(dir, -1.5);
+      target.x += 0.5;
+      this.donkeyG.position.lerp(target, Math.min(1, dt * 2.2));
+      this.donkeyG.rotation.y += (this.player.rotation.y - this.donkeyG.rotation.y) * Math.min(1, dt * 2.5);
+
+      if (Game.dialogueActive) return;
+
+      const lowSupplies = this.food <= 0 || this.water <= 0;
+      const moving = Controller.update(this.player, dt, {
+        speed: lowSupplies ? 2.0 : 3.2, camDist: 5.6, camHeight: 2.4,
+        clamp: pos => {
+          pos.x = Math.max(-8, Math.min(8, pos.x));
+          pos.z = Math.max(-119.5, Math.min(8, pos.z));
+          if (this.blocked) pos.z = Math.max(-36, pos.z);
+        }
+      });
+
+      // Supplies deplete on the move
+      if (moving) {
+        this.food = Math.max(0, this.food - dt * 1.1);
+        this.water = Math.max(0, this.water - dt * 1.5);
+        this.clopT -= dt;
+        if (this.clopT <= 0) { AudioEngine.clop(); this.clopT = 0.46; }
+      }
+      UI.setMeters('Food ' + Math.round(this.food) + ' &middot; Water ' + Math.round(this.water) +
+        (lowSupplies ? ' &mdash; <em>weary&hellip;</em>' : ''));
+
+      // Distance events
+      for (const ev of this.events) {
+        if (!ev.done && this.player.position.z < ev.z) {
+          ev.done = true;
+          this['ev_' + ev.id]();
+          return;
+        }
+      }
+
+      // Interactions (jackal standoff overrides proximity)
+      let near = null;
+      if (this.blocked) near = 'jackals';
+      else {
+        for (const it of this.interactables) {
+          if (it.used) continue;
+          if (this.player.position.distanceTo(it.obj.position) < it.r) { near = it.id; break; }
+        }
+      }
+      if (near !== this.nearest) {
+        this.nearest = near;
+        if (near) UI.show('interactBtn'); else UI.hide('interactBtn');
+      }
+      if (Input.consumeInteract() && near) {
+        if (near === 'jackals') this.jackalHit();
+        else if (near === 'well') {
+          this.water = 100;
+          this.food = Math.min(100, this.food + 40);
+          AudioEngine.bell(660);
+          UI.toast('You refill the waterskins and share bread beside the well.', 3000);
+        } else if (near === 'scroll') {
+          this.interactables = this.interactables.filter(it => it.id !== 'scroll');
+          Game.scene.remove(this.scrollProp);
+          this.nearest = null;
+          UI.hide('interactBtn');
+          Game.addFragment('Micah 5:2',
+            '&ldquo;But you, Bethlehem Ephrathah, being small among the clans of Judah, out of you one will come out to me that is to be ruler in Israel; whose goings out are from of old, from ancient times.&rdquo; (WEB)');
+        }
+      }
+    },
+
+    dispose() {
+      AudioEngine.rainStop();
+      UI.hide('meters');
+    }
+  };
+
+  /* =====================================================
+     Scene 4 — The Birth in the Manger (Luke 2:6-7)
+  ===================================================== */
+  const Scene4 = {
+    label: 'Scene 4 — The Birth in the Manger',
+    player: null, stable: null, star: null, baby: null, holyLight: null,
+    hayPiles: [], animals: [], flame: null, lanternLight: null, lanternG: null,
+    hayDone: 0, animalsDone: 0, lanternLit: false,
+    phase: 'prepare', cradle: 0, time: 0, nearest: null,
+
+    build() {
+      const s = Game.scene;
+      while (s.children.length) s.remove(s.children[0]);
+      s.background = new THREE.Color(0x0e1424);
+      s.fog = new THREE.Fog(0x0e1424, 20, 45);
+
+      s.add(new THREE.AmbientLight(0xbfc8e8, 0.22));
+      const moon = new THREE.DirectionalLight(0x9fb2dd, 0.3);
+      moon.position.set(-6, 12, 4);
+      s.add(moon);
+
+      const ground = new THREE.Mesh(new THREE.PlaneGeometry(60, 60),
+        new THREE.MeshLambertMaterial({ color: 0x6e6248 }));
+      ground.rotation.x = -Math.PI / 2;
+      s.add(ground);
+
+      // Stable with the star above
+      this.stable = Assets.stable();
+      this.stable.position.set(0, 0, -4);
+      s.add(this.stable);
+      this.star = Assets.star();
+      this.star.position.set(0, 9, -4);
+      s.add(this.star);
+
+      // Hay piles to gather
+      this.hayPiles = [];
+      [[3.5, -1], [-3.8, -2], [2.8, -7]].forEach(([x, z]) => {
+        const h = Assets.hay();
+        h.position.set(x, 0.22, z);
+        s.add(h);
+        this.hayPiles.push({ obj: h, used: false });
+      });
+
+      // Animals to lead to their posts inside
+      this.animals = [];
+      const ox = Assets.ox();
+      ox.position.set(4.2, 0, -6);
+      ox.rotation.y = 2.4;
+      s.add(ox);
+      this.animals.push({ obj: ox, target: new THREE.Vector3(-1.3, 0, -4.6), sent: false });
+      const donkey = Assets.donkey();
+      donkey.position.set(-4.5, 0, -6.5);
+      donkey.rotation.y = 0.6;
+      s.add(donkey);
+      this.animals.push({ obj: donkey, target: new THREE.Vector3(1.3, 0, -4.6), sent: false });
+
+      // Unlit lantern on a post at the stable's edge
+      this.lanternG = new THREE.Group();
+      const lpost = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.06, 1.5, 6),
+        new THREE.MeshLambertMaterial({ color: 0x6b4a2f }));
+      lpost.position.y = 0.75;
+      const lamp = Assets.lamp();
+      lamp.position.y = 1.5;
+      this.flame = lamp.children[1];
+      this.flame.visible = false;
+      this.lanternLight = lamp.userData.light;
+      this.lanternLight.intensity = 0;
+      this.lanternG.add(lpost, lamp);
+      this.lanternG.position.set(-2.2, 0, -2.2);
+      s.add(this.lanternG);
+
+      // Mary resting inside the stable
+      const mary = Assets.person({ robe: 0x7a8db0, sash: 0xdfe6ef });
+      mary.position.set(-0.8, 0, -4.2);
+      mary.rotation.y = 2.6;
+      s.add(mary);
+
+      for (let i = 0; i < 8; i++) {
+        const t = Assets.tree();
+        t.position.set((Math.random() - 0.5) * 40, 0, -12 - Math.random() * 20);
+        s.add(t);
+      }
+
+      // Player: Joseph
+      this.player = Assets.person({ robe: 0x8a6f4d, sash: 0x6e5a3a });
+      this.player.position.set(0, 0, 2);
+      s.add(this.player);
+
+      this.hayDone = 0; this.animalsDone = 0; this.lanternLit = false;
+      this.phase = 'prepare'; this.cradle = 0; this.time = 0; this.nearest = null;
+      this.baby = null; this.holyLight = null;
+
+      Controller.reset(0, 0.35);
+      this.refreshObjective();
+
+      setTimeout(() => {
+        DialogueSystem.start({
+          n1: { who: 'Narrator', text: 'The stable is quiet behind the crowded inn. Mary’s hour draws near — make ready a place for the child.', end: true }
+        }, 'n1');
+      }, 900);
+    },
+
+    refreshObjective() {
+      if (this.phase === 'prepare')
+        UI.setObjective('&#10022; Prepare the stable &mdash; hay ' + this.hayDone + '/3 &middot; animals ' +
+          this.animalsDone + '/2 &middot; lantern ' + (this.lanternLit ? '&#10003;' : '&#9675;'));
+    },
+
+    checkReady() {
+      if (this.phase === 'prepare' && this.hayDone >= 3 && this.animalsDone >= 2 && this.lanternLit) {
+        this.phase = 'birth';
+        UI.setObjective('');
+        UI.hide('interactBtn');
+        this.nearest = null;
+        setTimeout(() => this.birthSequence(), 1000);
+      }
+    },
+
+    birthSequence() {
+      UI.fade(true);
+      setTimeout(() => {
+        this.baby = Assets.baby();
+        this.baby.position.set(0, 0.64, -4.5);
+        Game.scene.add(this.baby);
+        this.holyLight = new THREE.PointLight(0xffe9b8, 0.4, 10);
+        this.holyLight.position.set(0, 1.6, -4.5);
+        Game.scene.add(this.holyLight);
+        UI.fade(false);
+        AudioEngine.coo();
+        DialogueSystem.start({
+          b1: {
+            who: 'Narrator',
+            text: 'While they were there, the day had come for her to give birth. She brought forth her firstborn son. She wrapped him in bands of cloth and laid him in a feeding trough, because there was no room for them in the inn. (Luke 2:6-7, WEB)',
+            end: true
+          }
+        }, 'b1', () => {
+          this.phase = 'cradle';
+          this.cradle = 0;
+          UI.setObjective('&#10022; Cradle the child at the manger &mdash; gently, three times');
+        });
+      }, 1000);
+    },
+
+    cradleBeat() {
+      this.cradle++;
+      AudioEngine.coo();
+      AudioEngine.bell(520 + this.cradle * 60);
+      if (this.cradle < 3) {
+        UI.toast('<em>Gently&hellip; (' + this.cradle + '/3)</em>', 1600);
+      } else {
+        UI.setObjective('');
+        UI.hide('interactBtn');
+        this.nearest = null;
+        this.phase = 'worship';
+        setTimeout(() => this.worshipDialogue(), 700);
+      }
+    },
+
+    worshipDialogue() {
+      DialogueSystem.start({
+        c1: { who: 'Mary', text: '“His name is Jesus.”', next: 'c2' },
+        c2: { who: 'Joseph', text: '“For it is he who shall save his people from their sins.”', next: 'c3' },
+        c3: {
+          who: 'Narrator',
+          text: 'A holy peace descends upon the stable. The animals still. The star burns bright above.',
+          choices: [
+            { label: 'Kneel, and worship the newborn King', blessing: true, next: 'c4' }
+          ]
+        },
+        c4: {
+          who: 'Narrator',
+          text: 'Glory to God in the highest. The Savior of the world sleeps in a manger.',
+          end: true,
+          action: () => { this.phase = 'glory'; AudioEngine.magnificat(); }
+        }
+      }, 'c1', () => {
+        Game.showComplete(
+          'Scene 4 Complete &mdash; The Birth in the Manger',
+          'Unto you is born a Savior, who is Christ the Lord.<br><br>' +
+          'Blessings of faith: <b>' + Game.blessing + '</b><br>' +
+          'Scripture fragments: <b>' + Game.fragments.length + '</b>',
+          'scene5'
+        );
+      });
+    },
+
+    update(dt) {
+      this.time += dt;
+      if (this.star) {
+        const pulse = 1 + Math.sin(this.time * 2.2) * 0.12;
+        this.star.scale.setScalar(pulse);
+        this.star.userData.light.intensity = 0.55 + Math.sin(this.time * 2.2) * 0.2;
+        this.star.rotation.y += dt * 0.4;
+      }
+      if (this.lanternLit)
+        this.lanternLight.intensity = 0.8 + Math.sin(this.time * 11) * 0.12 + Math.random() * 0.06;
+      if (this.holyLight) {
+        const targetI = this.phase === 'glory' ? 2.4 : 0.5;
+        this.holyLight.intensity += (targetI - this.holyLight.intensity) * dt * 1.4;
+      }
+      this.animals.forEach(a => {
+        if (a.sent && a.obj.position.distanceTo(a.target) > 0.1) {
+          a.obj.position.lerp(a.target, Math.min(1, dt * 1.2));
+        }
+      });
+
+      if (Game.dialogueActive) return;
+
+      Controller.update(this.player, dt, {
+        speed: 2.8, camDist: 4.8, camHeight: 2.1,
+        clamp: pos => {
+          pos.x = Math.max(-12, Math.min(12, pos.x));
+          pos.z = Math.max(-12, Math.min(8, pos.z));
+        }
+      });
+
+      // Phase-driven interactions
+      let near = null;
+      if (this.phase === 'prepare') {
+        for (const h of this.hayPiles) {
+          if (!h.used && this.player.position.distanceTo(h.obj.position) < 1.5) { near = h; break; }
+        }
+        if (!near) {
+          for (const a of this.animals) {
+            if (!a.sent && this.player.position.distanceTo(a.obj.position) < 1.9) { near = a; break; }
+          }
+        }
+        if (!near && !this.lanternLit && this.player.position.distanceTo(this.lanternG.position) < 1.7)
+          near = 'lantern';
+      } else if (this.phase === 'cradle') {
+        if (this.player.position.distanceTo(new THREE.Vector3(0, 0, -4.5)) < 2.2) near = 'baby';
+      }
+
+      if (near !== this.nearest) {
+        this.nearest = near;
+        if (near) UI.show('interactBtn'); else UI.hide('interactBtn');
+      }
+      if (Input.consumeInteract() && near) {
+        if (near === 'lantern') {
+          this.lanternLit = true;
+          this.flame.visible = true;
+          AudioEngine.bell(840);
+          UI.toast('The lantern glows warm against the night.', 2400);
+          this.refreshObjective();
+          this.checkReady();
+        } else if (near === 'baby') {
+          this.cradleBeat();
+        } else if (near.target) {
+          near.sent = true;
+          this.animalsDone++;
+          AudioEngine.bell(600);
+          UI.toast('The animal settles into its place.', 2000);
+          this.refreshObjective();
+          this.checkReady();
+        } else {
+          near.used = true;
+          near.obj.visible = false;
+          this.hayDone++;
+          const straw = Assets.hay();
+          straw.scale.setScalar(0.5 + this.hayDone * 0.12);
+          straw.position.set(0.4 - this.hayDone * 0.35, 0.55, -4.5);
+          Game.scene.add(straw);
+          AudioEngine.bell(720);
+          UI.toast('You spread fresh hay for warmth. (' + this.hayDone + '/3)', 2000);
+          this.refreshObjective();
+          this.checkReady();
+        }
+        this.nearest = null;
+        UI.hide('interactBtn');
+      }
+    },
+
+    dispose() {}
+  };
+
+  /* =====================================================
+     Scene 5 — Angels and Shepherds (Luke 2:8-14)
+  ===================================================== */
+  const Scene5 = {
+    label: 'Scene 5 — Angels and Shepherds',
+    player: null, fire: null, glowLight: null, mainAngel: null, host: [],
+    strays: [], scrollProp: null,
+    strayDone: 0, phase: 'herd', time: 0, nearest: null,
+
+    build() {
+      const s = Game.scene;
+      while (s.children.length) s.remove(s.children[0]);
+      s.background = new THREE.Color(0x0d1426);
+      s.fog = new THREE.Fog(0x0d1426, 22, 50);
+
+      s.add(new THREE.AmbientLight(0xbfc8e8, 0.2));
+      const moon = new THREE.DirectionalLight(0x9fb2dd, 0.28);
+      moon.position.set(-6, 12, 4);
+      s.add(moon);
+
+      const ground = new THREE.Mesh(new THREE.PlaneGeometry(70, 70),
+        new THREE.MeshLambertMaterial({ color: 0x4d5a3d }));
+      ground.rotation.x = -Math.PI / 2;
+      s.add(ground);
+      for (let i = 0; i < 8; i++) {
+        const r = Assets.rock();
+        r.position.set((Math.random() - 0.5) * 44, 0.2, (Math.random() - 0.5) * 44);
+        s.add(r);
+      }
+      for (let i = 0; i < 6; i++) {
+        const t = Assets.tree();
+        t.position.set((Math.random() - 0.5) * 56, 0, (Math.random() - 0.5) * 56);
+        if (t.position.length() < 10) t.position.setLength(14);
+        s.add(t);
+      }
+
+      // Campfire with the resting flock
+      this.fire = Assets.campfire();
+      this.fire.position.set(0, 0, -2);
+      s.add(this.fire);
+      for (let i = 0; i < 8; i++) {
+        const sh = Assets.sheep();
+        const a = (i / 8) * Math.PI * 2;
+        sh.position.set(Math.cos(a) * (2.5 + Math.random()), 0, -2 + Math.sin(a) * (2.5 + Math.random()));
+        s.add(sh);
+      }
+
+      // Fellow shepherds by the fire
+      const eli = Assets.person({ robe: 0x9c8a68, sash: 0x6e5a3a });
+      eli.position.set(-1.6, 0, -3.2);
+      eli.rotation.y = 0.6;
+      s.add(eli);
+      const boaz = Assets.person({ robe: 0x7d6a4a, sash: 0x9c8a68 });
+      boaz.position.set(1.8, 0, -3.4);
+      boaz.rotation.y = -0.7;
+      s.add(boaz);
+
+      // Three strays to bring home
+      this.strays = [];
+      [[8, -9], [-9, -6], [6, 6]].forEach(([x, z]) => {
+        const sh = Assets.sheep();
+        sh.position.set(x, 0, z);
+        s.add(sh);
+        this.strays.push({ obj: sh, sent: false, target: new THREE.Vector3((Math.random() - 0.5) * 3, 0, -2 + (Math.random() - 0.5) * 3) });
+      });
+
+      // Isaiah 9:6 scroll by a rock
+      this.scrollProp = Assets.scroll();
+      this.scrollProp.position.set(4, 0.3, 2.5);
+      s.add(this.scrollProp);
+
+      // Player: a shepherd
+      this.player = Assets.person({ robe: 0x8a7a58, sash: 0xb5a17e });
+      this.player.position.set(0, 0, 3);
+      s.add(this.player);
+
+      this.strayDone = 0; this.phase = 'herd'; this.time = 0; this.nearest = null;
+      this.mainAngel = null; this.glowLight = null; this.host = [];
+      this.bleatT = 3;
+
+      Controller.reset(0, 0.35);
+      UI.setObjective('&#10022; Guide the strays back to the flock (0/3)');
+
+      setTimeout(() => {
+        DialogueSystem.start({
+          n1: { who: 'Narrator', text: 'There were shepherds in the same country staying in the field, and keeping watch by night over their flock. (Luke 2:8, WEB)', end: true }
+        }, 'n1');
+      }, 900);
+    },
+
+    angelEvent() {
+      this.phase = 'glory';
+      AudioEngine.shimmer();
+      UI.setObjective('');
+      UI.hide('interactBtn');
+      this.nearest = null;
+      this.glowLight = new THREE.PointLight(0xfff3cf, 0, 40);
+      this.glowLight.position.set(0, 12, -6);
+      Game.scene.add(this.glowLight);
+      this.mainAngel = Assets.person({ robe: 0xf7f2e2, head: 0xe9dcc0, sash: 0xe8c56a });
+      this.mainAngel.scale.setScalar(1.6);
+      this.mainAngel.position.set(0, 3.2, -7);
+      this.mainAngel.rotation.y = Math.PI;
+      this.mainAngel.traverse(o => {
+        if (o.isMesh) { o.material = o.material.clone(); o.material.emissive = new THREE.Color(0x4a3d14); }
+      });
+      Game.scene.add(this.mainAngel);
+      setTimeout(() => this.angelDialogue(), 1600);
+    },
+
+    angelDialogue() {
+      DialogueSystem.start({
+        a1: { who: 'Angel of the Lord', text: '“Don’t be afraid, for behold, I bring you good news of great joy which will be to all the people.”', next: 'a2' },
+        a2: { who: 'Angel of the Lord', text: '“For there is born to you today, in David’s city, a Savior, who is Christ the Lord.”', next: 'a3' },
+        a3: { who: 'Angel of the Lord', text: '“This is the sign to you: you will find a baby wrapped in strips of cloth, lying in a feeding trough.” (Luke 2:10-12)', end: true }
+      }, 'a1', () => this.hostCinematic());
+    },
+
+    hostCinematic() {
+      this.phase = 'host';
+      AudioEngine.gloria();
+      for (let i = 0; i < 14; i++) {
+        const a = Assets.person({ robe: 0xf7f2e2, head: 0xe9dcc0, sash: 0xe8c56a });
+        const arc = -Math.PI * 0.4 + (i / 13) * Math.PI * 0.8;
+        a.scale.setScalar(0.7 + Math.random() * 0.5);
+        a.position.set(Math.sin(arc) * (9 + Math.random() * 5), 4 + Math.random() * 4, -8 - Math.cos(arc) * 6);
+        a.rotation.y = Math.PI;
+        a.traverse(o => {
+          if (o.isMesh) { o.material = o.material.clone(); o.material.emissive = new THREE.Color(0x3a3010); }
+        });
+        Game.scene.add(a);
+        this.host.push(a);
+      }
+      UI.toast('The sky fills with the armies of heaven!', 3000);
+      setTimeout(() => {
+        DialogueSystem.start({
+          h1: { who: 'Multitude of Angels', text: '“Glory to God in the highest, on earth peace, good will toward men.” (Luke 2:14)', next: 'h2' },
+          h2: {
+            who: 'Eli the Shepherd',
+            text: '“Did you see it? The glory of the Lord, round about us!”',
+            choices: [
+              { label: '“Let’s go to Bethlehem now, and see this thing that has happened!”', blessing: true, next: 'h3' },
+              { label: '“I am afraid… can it be true?”', next: 'h2b' }
+            ]
+          },
+          h2b: { who: 'Boaz the Shepherd', text: '“The angel said, ‘Don’t be afraid.’ Come — we will go together.”', next: 'h3' },
+          h3: { who: 'Narrator', text: 'They left their flocks and came with haste toward David’s city. (Luke 2:16)', end: true }
+        }, 'h1', () => {
+          Game.showComplete(
+            'Scene 5 Complete &mdash; Angels and Shepherds',
+            'Good news of great joy, announced first to the lowly.<br><br>' +
+            'Blessings of faith: <b>' + Game.blessing + '</b><br>' +
+            'Scripture fragments: <b>' + Game.fragments.length + '</b>',
+            'scene6'
+          );
+        });
+      }, 2600);
+    },
+
+    update(dt) {
+      this.time += dt;
+      if (this.fire) {
+        this.fire.userData.light.intensity = 1.0 + Math.sin(this.time * 12) * 0.2 + Math.random() * 0.1;
+        this.fire.userData.flames.forEach((f, i) => {
+          f.scale.y = 1 + Math.sin(this.time * (9 + i * 3)) * 0.18;
+        });
+      }
+      this.bleatT -= dt;
+      if (this.bleatT <= 0 && this.phase === 'herd') {
+        AudioEngine.bleat();
+        this.bleatT = 4 + Math.random() * 5;
+      }
+      if (this.glowLight && this.glowLight.intensity < 2.4)
+        this.glowLight.intensity += dt * 0.9;
+      if (this.mainAngel)
+        this.mainAngel.position.y = 3.2 + Math.sin(this.time * 1.4) * 0.15;
+      this.host.forEach((a, i) => {
+        a.position.y += Math.sin(this.time * 1.2 + i) * dt * 0.25;
+      });
+      if (this.scrollProp && !this.scrollProp.userData.taken)
+        this.scrollProp.rotation.y += dt * 1.2;
+      this.strays.forEach(st => {
+        if (st.sent && st.obj.position.distanceTo(st.target) > 0.15)
+          st.obj.position.lerp(st.target, Math.min(1, dt * 1.1));
+      });
+
+      if (Game.dialogueActive) return;
+
+      Controller.update(this.player, dt, {
+        speed: 3.0, camDist: 5.2, camHeight: 2.2,
+        clamp: pos => {
+          pos.x = Math.max(-16, Math.min(16, pos.x));
+          pos.z = Math.max(-16, Math.min(16, pos.z));
+        }
+      });
+
+      let near = null;
+      if (this.phase === 'herd') {
+        for (const st of this.strays) {
+          if (!st.sent && this.player.position.distanceTo(st.obj.position) < 1.7) { near = st; break; }
+        }
+      }
+      if (!near && this.scrollProp && !this.scrollProp.userData.taken &&
+          this.player.position.distanceTo(this.scrollProp.position) < 1.7) near = 'scroll';
+
+      if (near !== this.nearest) {
+        this.nearest = near;
+        if (near) UI.show('interactBtn'); else UI.hide('interactBtn');
+      }
+      if (Input.consumeInteract() && near) {
+        if (near === 'scroll') {
+          this.scrollProp.userData.taken = true;
+          Game.scene.remove(this.scrollProp);
+          this.scrollProp = null;
+          Game.addFragment('Isaiah 9:6',
+            '&ldquo;For to us a child is born. To us a son is given; and the government will be on his shoulders. His name will be called Wonderful Counselor, Mighty God, Everlasting Father, Prince of Peace.&rdquo; (WEB)');
+        } else {
+          near.sent = true;
+          this.strayDone++;
+          AudioEngine.bell(640 + this.strayDone * 60);
+          UI.toast('The stray trots home to the flock. (' + this.strayDone + '/3)', 2200);
+          if (this.strayDone >= 3) {
+            setTimeout(() => this.angelEvent(), 1200);
+          } else {
+            UI.setObjective('&#10022; Guide the strays back to the flock (' + this.strayDone + '/3)');
+          }
+        }
+        this.nearest = null;
+        UI.hide('interactBtn');
+      }
+    },
+
+    dispose() {}
+  };
+
+  /* =====================================================
+     Scene 6 — The Shepherds Visit (Luke 2:15-20)
+  ===================================================== */
+  const Scene6 = {
+    label: 'Scene 6 — The Shepherds Visit',
+    player: null, stable: null, star: null, holyLight: null,
+    villagers: [], toldCount: 0, blessedOnce: false,
+    phase: 'approach', time: 0, nearest: null, mangerPos: null,
+
+    build() {
+      const s = Game.scene;
+      while (s.children.length) s.remove(s.children[0]);
+      s.background = new THREE.Color(0x101728);
+      s.fog = new THREE.Fog(0x101728, 22, 48);
+
+      s.add(new THREE.AmbientLight(0xcabf9e, 0.28));
+      const moon = new THREE.DirectionalLight(0x9fb2dd, 0.25);
+      moon.position.set(-6, 12, 4);
+      s.add(moon);
+
+      const ground = new THREE.Mesh(new THREE.PlaneGeometry(60, 60),
+        new THREE.MeshLambertMaterial({ color: 0x6e6248 }));
+      ground.rotation.x = -Math.PI / 2;
+      s.add(ground);
+
+      // Stable, star, the child in the manger
+      this.stable = Assets.stable();
+      this.stable.position.set(0, 0, -5);
+      s.add(this.stable);
+      this.star = Assets.star();
+      this.star.position.set(0, 9, -5);
+      s.add(this.star);
+      const baby = Assets.baby();
+      baby.position.set(0, 0.64, -5.5);
+      s.add(baby);
+      this.holyLight = new THREE.PointLight(0xffe9b8, 0.9, 10);
+      this.holyLight.position.set(0, 1.6, -5.5);
+      s.add(this.holyLight);
+      this.mangerPos = new THREE.Vector3(0, 0, -5.5);
+
+      const mary = Assets.person({ robe: 0x7a8db0, sash: 0xdfe6ef });
+      mary.position.set(-0.9, 0, -5.2);
+      mary.rotation.y = 2.6;
+      s.add(mary);
+      const joseph = Assets.person({ robe: 0x8a6f4d, sash: 0x6e5a3a });
+      joseph.position.set(0.9, 0, -5.0);
+      joseph.rotation.y = -2.6;
+      s.add(joseph);
+
+      // Village hub behind
+      [[-7, 6, 0.4], [7, 8, -0.5], [0, 14, 0.1]].forEach(([x, z, ry]) => {
+        const h = Assets.house();
+        h.position.set(x, 0, z);
+        h.rotation.y = ry;
+        s.add(h);
+      });
+      this.villagers = [];
+      [[5.5, 6.5], [-5.4, 7.6], [1.2, 12.4]].forEach(([x, z], i) => {
+        const v = Assets.person({
+          robe: [0x9c8a68, 0x7d6a4a, 0xa5654a][i],
+          sash: [0x6e5a3a, 0xb5a17e, 0xc2a36b][i]
+        });
+        v.position.set(x, 0, z);
+        v.rotation.y = Math.PI + (Math.random() - 0.5);
+        s.add(v);
+        this.villagers.push({ obj: v, told: false });
+      });
+
+      // Fellow shepherds arriving alongside
+      const eli = Assets.person({ robe: 0x9c8a68, sash: 0x6e5a3a });
+      eli.position.set(-1.4, 0, 0.5);
+      s.add(eli);
+
+      // Player: shepherd
+      this.player = Assets.person({ robe: 0x8a7a58, sash: 0xb5a17e });
+      this.player.position.set(0.6, 0, 4);
+      s.add(this.player);
+
+      this.toldCount = 0; this.blessedOnce = false;
+      this.phase = 'approach'; this.time = 0; this.nearest = null;
+
+      Controller.reset(0, 0.35);
+      UI.setObjective('&#10022; Go to the stable and see the sign');
+
+      setTimeout(() => {
+        DialogueSystem.start({
+          n1: { who: 'Narrator', text: '“Let’s go to Bethlehem, now, and see this thing that has happened, which the Lord has made known to us.” (Luke 2:15, WEB)', end: true }
+        }, 'n1');
+      }, 900);
+    },
+
+    worshipVisit() {
+      DialogueSystem.start({
+        w1: { who: 'Narrator', text: 'They came with haste and found Mary and Joseph, and the baby lying in the feeding trough — just as the angel had said. (Luke 2:16)', next: 'w2' },
+        w2: {
+          who: 'Narrator',
+          text: 'You kneel in the straw. Offer what a shepherd has.',
+          choices: [
+            { label: 'Offer a lamb', blessing: true, next: 'w3a' },
+            { label: 'Offer wool', blessing: true, next: 'w3b' },
+            { label: 'Offer bread', blessing: true, next: 'w3c' }
+          ]
+        },
+        w3a: { who: 'Narrator', text: 'The firstborn of your flock, laid gently down — a lamb, before the Lamb of God.', next: 'w4' },
+        w3b: { who: 'Narrator', text: 'Soft wool tucked around the child — warmth for the newborn King.', next: 'w4' },
+        w3c: { who: 'Narrator', text: 'Simple bread, given with a full heart, set beside the manger.', next: 'w4' },
+        w4: { who: 'Mary', text: '“Thank you, friends. His name is Jesus.”', end: true }
+      }, 'w1', () => {
+        this.phase = 'spread';
+        AudioEngine.bell(880);
+        UI.setObjective('&#10022; Tell the good news in the village (0/3)');
+      });
+    },
+
+    tellVillager(v) {
+      const firstBlessing = !this.blessedOnce;
+      DialogueSystem.start({
+        v1: {
+          who: 'Villager',
+          text: '“Why do you shepherds run through the streets at this hour of the night?”',
+          choices: [
+            { label: '“A Savior is born — Christ the Lord! We have seen him!”', blessing: firstBlessing, next: 'v2' },
+            { label: '“You would not believe us if we told you.”', next: 'v1b' }
+          ]
+        },
+        v1b: { who: 'Villager', text: '“Try me, shepherd. What has set your eyes alight?”', next: 'v1c' },
+        v1c: { who: 'You', text: '“A Savior is born in David’s city — we have seen him, wrapped in cloth, lying in a manger!”', next: 'v2' },
+        v2: { who: 'Narrator', text: 'All who heard it wondered at the things spoken to them by the shepherds. (Luke 2:18)', end: true }
+      }, 'v1', () => {
+        this.blessedOnce = true;
+        v.told = true;
+        this.toldCount++;
+        if (this.toldCount >= 3) {
+          UI.setObjective('');
+          setTimeout(() => this.finale(), 900);
+        } else {
+          UI.setObjective('&#10022; Tell the good news in the village (' + this.toldCount + '/3)');
+        }
+      });
+    },
+
+    finale() {
+      DialogueSystem.start({
+        f1: { who: 'Narrator', text: 'But Mary kept all these sayings, pondering them in her heart. (Luke 2:19)', next: 'f2' },
+        f2: { who: 'Narrator', text: 'The shepherds returned, glorifying and praising God for all the things that they had heard and seen, even as it was told them. (Luke 2:20)', end: true }
+      }, 'f1', () => {
+        Game.showComplete(
+          'Scene 6 Complete &mdash; The Shepherds Visit',
+          'The first witnesses carried the first Gospel.<br><br>' +
+          'Blessings of faith: <b>' + Game.blessing + '</b><br>' +
+          'Scripture fragments: <b>' + Game.fragments.length + '</b>',
+          'scene7'
+        );
+      });
+    },
+
+    update(dt) {
+      this.time += dt;
+      if (this.star) {
+        const pulse = 1 + Math.sin(this.time * 2.2) * 0.12;
+        this.star.scale.setScalar(pulse);
+        this.star.userData.light.intensity = 0.55 + Math.sin(this.time * 2.2) * 0.2;
+      }
+      if (this.holyLight)
+        this.holyLight.intensity = 0.85 + Math.sin(this.time * 3) * 0.1;
+
+      if (Game.dialogueActive) return;
+
+      Controller.update(this.player, dt, {
+        speed: 3.0, camDist: 5.0, camHeight: 2.2,
+        clamp: pos => {
+          pos.x = Math.max(-16, Math.min(16, pos.x));
+          pos.z = Math.max(-10, Math.min(17, pos.z));
+        }
+      });
+
+      let near = null;
+      if (this.phase === 'approach' && this.player.position.distanceTo(this.mangerPos) < 2.6) near = 'manger';
+      else if (this.phase === 'spread') {
+        for (const v of this.villagers) {
+          if (!v.told && this.player.position.distanceTo(v.obj.position) < 1.9) { near = v; break; }
+        }
+      }
+      if (near !== this.nearest) {
+        this.nearest = near;
+        if (near) UI.show('interactBtn'); else UI.hide('interactBtn');
+      }
+      if (Input.consumeInteract() && near) {
+        this.nearest = null;
+        UI.hide('interactBtn');
+        if (near === 'manger') { this.phase = 'visited'; this.worshipVisit(); }
+        else this.tellVillager(near);
+      }
+    },
+
+    dispose() {}
+  };
+
+  /* =====================================================
+     Scene 7 — The Magi and the Star (Matthew 2:1-12)
+  ===================================================== */
+  const Scene7 = {
+    label: 'Scene 7 — The Magi and the Star',
+    player: null, star: null, companions: [], events: [],
+    time: 0, chimeT: 0, offCourse: false, nearest: null,
+
+    build() {
+      const s = Game.scene;
+      while (s.children.length) s.remove(s.children[0]);
+      s.background = new THREE.Color(0x141b33);
+      s.fog = new THREE.Fog(0x141b33, 26, 60);
+
+      s.add(new THREE.AmbientLight(0xbfc8e8, 0.26));
+      const moon = new THREE.DirectionalLight(0x9fb2dd, 0.3);
+      moon.position.set(6, 14, 4);
+      s.add(moon);
+
+      const ground = new THREE.Mesh(new THREE.PlaneGeometry(70, 200),
+        new THREE.MeshLambertMaterial({ color: 0x8a7a58 }));
+      ground.rotation.x = -Math.PI / 2;
+      ground.position.z = -75;
+      s.add(ground);
+
+      for (let i = 0; i < 18; i++) {
+        const dune = new THREE.Mesh(new THREE.IcosahedronGeometry(3 + Math.random() * 4, 0),
+          new THREE.MeshLambertMaterial({ color: 0x99885f, flatShading: true }));
+        const side = Math.random() < 0.5 ? -1 : 1;
+        dune.position.set(side * (12 + Math.random() * 14), -1.2, 8 - Math.random() * 160);
+        dune.scale.y = 0.4;
+        s.add(dune);
+      }
+      for (let i = 0; i < 8; i++) {
+        const p = Assets.palm();
+        const side = Math.random() < 0.5 ? -1 : 1;
+        p.position.set(side * (5 + Math.random() * 8), 0, -Math.random() * 150);
+        s.add(p);
+      }
+
+      // Jerusalem: dark palace, walls, Herod waiting
+      const palMat = new THREE.MeshLambertMaterial({ color: 0x494257 });
+      const palace = new THREE.Mesh(new THREE.BoxGeometry(9, 6, 5), palMat);
+      palace.position.set(-9, 3, -32);
+      s.add(palace);
+      const tower = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.4, 8, 7), palMat);
+      tower.position.set(-13.5, 4, -30);
+      s.add(tower);
+      this.herod = Assets.person({ robe: 0x3d3548, sash: 0xe8c56a });
+      this.herod.scale.setScalar(1.1);
+      this.herod.position.set(-4.5, 0, -30);
+      this.herod.rotation.y = Math.PI / 2;
+      s.add(this.herod);
+
+      // The house in Bethlehem — the young child with Mary
+      const house = Assets.house();
+      house.position.set(0, 0, -72);
+      s.add(house);
+      const mary = Assets.person({ robe: 0x7a8db0, sash: 0xdfe6ef });
+      mary.position.set(-1.2, 0, -70);
+      mary.rotation.y = Math.PI;
+      s.add(mary);
+      const child = Assets.person({ robe: 0xf2ecd9, head: 0xdfb896, sash: 0xf2ecd9 });
+      child.scale.setScalar(0.5);
+      child.position.set(-0.6, 0, -69.6);
+      child.rotation.y = Math.PI;
+      s.add(child);
+      this.housePos = new THREE.Vector3(0, 0, -70);
+
+      // The star, leading on ahead
+      this.star = Assets.star();
+      this.star.scale.setScalar(1.4);
+      this.star.position.set(0, 9, -20);
+      s.add(this.star);
+
+      // Player: a Magus, with two companions
+      this.player = Assets.person({ robe: 0x7d3f7a, sash: 0xe8c56a });
+      this.player.position.set(0, 0, 5);
+      this.player.rotation.y = Math.PI;
+      s.add(this.player);
+      this.companions = [];
+      [[0x2f5d8e, -1], [0x8e5d2f, 1]].forEach(([col, side]) => {
+        const c = Assets.person({ robe: col, sash: 0xe8c56a });
+        c.position.set(side * 1.2, 0, 6.5);
+        s.add(c);
+        this.companions.push({ obj: c, side });
+      });
+
+      this.events = [
+        { z: -26, id: 'herod', done: false },
+        { z: -66, id: 'arrive', done: false }
+      ];
+      this.time = 0; this.chimeT = 0; this.offCourse = false; this.nearest = null;
+
+      Controller.reset(0, 0.35);
+      UI.setObjective('&#10022; Follow the star &mdash; keep your caravan beneath its light');
+
+      setTimeout(() => {
+        DialogueSystem.start({
+          n1: { who: 'Narrator', text: 'Now when Jesus was born in Bethlehem of Judea in the days of King Herod, behold, wise men from the east came, saying, “Where is he who is born King of the Jews? For we saw his star in the east, and have come to worship him.” (Matthew 2:1-2, WEB)', end: true }
+        }, 'n1');
+      }, 900);
+    },
+
+    ev_herod() {
+      DialogueSystem.start({
+        j1: { who: 'Narrator', text: 'In Jerusalem, King Herod heard of the star and was troubled. He called the wise men secretly and sent them to Bethlehem.', next: 'j2' },
+        j2: {
+          who: 'King Herod',
+          text: '“Go and search diligently for the young child. When you have found him, bring me word, that I also may come and worship him.” (Matthew 2:8)',
+          choices: [
+            { label: 'Bow, and say nothing', blessing: true, next: 'j3' },
+            { label: 'Promise to return with word', next: 'j3b' }
+          ]
+        },
+        j3: { who: 'Narrator', text: 'Something in the king’s eyes does not match his words. You resolve to watch, and pray.', end: true },
+        j3b: { who: 'Narrator', text: 'The words leave your lips — yet your heart is uneasy. God will make the true way plain.', end: true }
+      }, 'j1');
+    },
+
+    ev_arrive() {
+      DialogueSystem.start({
+        g1: { who: 'Narrator', text: 'The star which they saw in the east went before them until it came and stood over where the young child was. When they saw the star, they rejoiced with exceedingly great joy. (Matthew 2:9-10)', next: 'g2' },
+        g2: {
+          who: 'Narrator',
+          text: 'They came into the house and saw the young child with Mary, his mother — and they fell down and worshiped him. (Matthew 2:11)',
+          choices: [
+            { label: 'Open the treasures', blessing: true, next: 'g3' }
+          ]
+        },
+        g3: { who: 'Magus', text: '“Gold — for the King of kings.”', next: 'g4' },
+        g4: { who: 'Magus', text: '“Frankincense — for our great High Priest.”', next: 'g5' },
+        g5: { who: 'Magus', text: '“Myrrh — for the offering he will one day become.”', next: 'g6' },
+        g6: {
+          who: 'Narrator',
+          text: 'That night, being warned in a dream not to return to Herod…',
+          choices: [
+            { label: 'Take another road home, avoiding Jerusalem', blessing: true, next: 'g7' },
+            { label: 'Return through Jerusalem, as promised', next: 'g6b' }
+          ]
+        },
+        g6b: { who: 'Narrator', text: 'The dream’s warning rings again — “Do not return to Herod.” You turn your caravan aside.', next: 'g7' },
+        g7: { who: 'Narrator', text: 'They departed into their own country another way. Divine protection rests over the little house. (Matthew 2:12)', end: true }
+      }, 'g1', () => {
+        Game.showComplete(
+          'Scene 7 Complete &mdash; The Magi and the Star',
+          'True worship discerned the King &mdash; and the deceiver was denied.<br><br>' +
+          'Blessings of faith: <b>' + Game.blessing + '</b><br>' +
+          'Scripture fragments: <b>' + Game.fragments.length + '</b>',
+          'scene8'
+        );
+      });
+    },
+
+    update(dt) {
+      this.time += dt;
+      const pz = this.player.position.z;
+
+      // The star leads on ahead, drifting with the road
+      if (pz > -64) {
+        this.star.position.x += ((Math.sin(pz * 0.05) * 3) - this.star.position.x) * dt;
+        this.star.position.z = pz - 18;
+      } else {
+        this.star.position.x += (0 - this.star.position.x) * dt;
+        this.star.position.z += (-70 - this.star.position.z) * dt;
+      }
+      const pulse = 1.4 + Math.sin(this.time * 2.2) * 0.15;
+      this.star.scale.setScalar(pulse);
+      this.star.userData.light.intensity = 0.7 + Math.sin(this.time * 2.2) * 0.25;
+
+      // On-course chime
+      this.chimeT += dt;
+      const off = Math.abs(this.player.position.x - this.star.position.x) > 4.5;
+      if (!off && this.chimeT > 4) { AudioEngine.bell(1320); this.chimeT = 0; }
+      if (off && !this.offCourse) UI.toast('The star&rsquo;s light dims at the road&rsquo;s edge &mdash; steer beneath it.', 2600);
+      this.offCourse = off;
+
+      // Companions follow
+      const ry = this.player.rotation.y;
+      const dir = new THREE.Vector3(Math.sin(ry), 0, Math.cos(ry));
+      const perp = new THREE.Vector3(Math.cos(ry), 0, -Math.sin(ry));
+      this.companions.forEach(c => {
+        const target = this.player.position.clone().addScaledVector(dir, -1.6).addScaledVector(perp, c.side * 1.1);
+        c.obj.position.lerp(target, Math.min(1, dt * 2.2));
+        c.obj.rotation.y += (ry - c.obj.rotation.y) * Math.min(1, dt * 2.5);
+      });
+
+      if (Game.dialogueActive) return;
+
+      Controller.update(this.player, dt, {
+        speed: 3.2, camDist: 5.6, camHeight: 2.4,
+        clamp: pos => {
+          pos.x = Math.max(-10, Math.min(10, pos.x));
+          pos.z = Math.max(-70, Math.min(7, pos.z));
+        }
+      });
+
+      for (const ev of this.events) {
+        if (!ev.done && pz < ev.z) {
+          ev.done = true;
+          this['ev_' + ev.id]();
+          return;
+        }
+      }
+    },
+
+    dispose() {}
+  };
+
+  /* =====================================================
+     Scene 8 — Flight to Egypt (Matthew 2:13-23)
+  ===================================================== */
+  const Scene8 = {
+    label: 'Scene 8 — Flight to Egypt',
+    player: null, donkeyG: null, patrols: [], scrollProp: null, wellProp: null,
+    water: 100, time: 0, nearest: null, arrived: false, events: [],
+
+    build() {
+      const s = Game.scene;
+      while (s.children.length) s.remove(s.children[0]);
+      s.background = new THREE.Color(0x0b101f);
+      s.fog = new THREE.Fog(0x0b101f, 20, 46);
+
+      s.add(new THREE.AmbientLight(0x9fb2dd, 0.22));
+      const moon = new THREE.DirectionalLight(0x8fa3c8, 0.3);
+      moon.position.set(-8, 14, 2);
+      s.add(moon);
+
+      const ground = new THREE.Mesh(new THREE.PlaneGeometry(70, 260),
+        new THREE.MeshLambertMaterial({ color: 0x7d6f4e }));
+      ground.rotation.x = -Math.PI / 2;
+      ground.position.z = -95;
+      s.add(ground);
+
+      for (let i = 0; i < 20; i++) {
+        const dune = new THREE.Mesh(new THREE.IcosahedronGeometry(3 + Math.random() * 5, 0),
+          new THREE.MeshLambertMaterial({ color: 0x8a7a58, flatShading: true }));
+        const side = Math.random() < 0.5 ? -1 : 1;
+        dune.position.set(side * (11 + Math.random() * 16), -1.4, 8 - Math.random() * 210);
+        dune.scale.y = 0.4;
+        s.add(dune);
+      }
+      for (let i = 0; i < 6; i++) {
+        const p = Assets.palm();
+        const side = Math.random() < 0.5 ? -1 : 1;
+        p.position.set(side * (6 + Math.random() * 9), 0, -20 - Math.random() * 70);
+        s.add(p);
+      }
+
+      // Herod's patrols — torch-bearing soldiers sweeping the road
+      this.patrols = [];
+      [-28, -52, -76].forEach((z, i) => {
+        const g = new THREE.Group();
+        const sol = Assets.person({ robe: 0x8e3d3d, sash: 0xb5a17e });
+        g.add(sol);
+        const torch = new THREE.PointLight(0xff9c46, 0.9, 7);
+        torch.position.y = 1.6;
+        g.add(torch);
+        g.position.set(0, 0, z);
+        s.add(g);
+        this.patrols.push({ obj: g, z, phase: i * 2.1, cooldown: 0 });
+      });
+
+      // Desert well midway
+      this.wellProp = Assets.well();
+      this.wellProp.position.set(-4, 0, -62);
+      s.add(this.wellProp);
+
+      // Hosea 11:1 scroll near the border
+      this.scrollProp = Assets.scroll();
+      this.scrollProp.position.set(2.5, 0.3, -92);
+      s.add(this.scrollProp);
+
+      // Egypt: oasis at the road's end
+      for (let i = 0; i < 6; i++) {
+        const p = Assets.palm();
+        p.position.set((Math.random() - 0.5) * 14, 0, -104 - Math.random() * 8);
+        s.add(p);
+      }
+      const pond = new THREE.Mesh(new THREE.CircleGeometry(2.4, 10),
+        new THREE.MeshLambertMaterial({ color: 0x3f6c8e }));
+      pond.rotation.x = -Math.PI / 2;
+      pond.position.set(2, 0.02, -106);
+      s.add(pond);
+      for (let i = 0; i < 3; i++) {
+        const h = Assets.house();
+        h.position.set(-6 + i * 6, 0, -112);
+        h.rotation.y = (Math.random() - 0.5);
+        s.add(h);
+      }
+
+      // Player: Joseph; donkey carries Mary and the child
+      this.player = Assets.person({ robe: 0x8a6f4d, sash: 0x6e5a3a });
+      this.player.position.set(0, 0, 5);
+      this.player.rotation.y = Math.PI;
+      s.add(this.player);
+      this.donkeyG = new THREE.Group();
+      this.donkeyG.add(Assets.donkey());
+      const mary = Assets.person({ robe: 0x7a8db0, sash: 0xdfe6ef });
+      mary.scale.setScalar(0.85);
+      mary.position.set(-0.05, 0.62, 0);
+      this.donkeyG.add(mary);
+      const child = Assets.baby();
+      child.scale.setScalar(0.9);
+      child.position.set(0.15, 1.15, 0.12);
+      this.donkeyG.add(child);
+      this.donkeyG.position.set(0.8, 0, 6.5);
+      s.add(this.donkeyG);
+
+      this.water = 100; this.time = 0; this.nearest = null; this.arrived = false;
+      this.events = [
+        { z: -40, id: 'faith1', done: false },
+        { z: -86, id: 'faith2', done: false },
+        { z: -100, id: 'egypt', done: false }
+      ];
+
+      Controller.reset(0, 0.35);
+      UI.show('meters');
+      UI.setObjective('&#10022; Flee south under cover of night &mdash; avoid the patrols');
+
+      setTimeout(() => {
+        DialogueSystem.start({
+          e1: {
+            who: 'Angel of the Lord',
+            text: '“Arise and take the young child and his mother, and flee into Egypt, and stay there until I tell you, for Herod will seek the young child to destroy him.” (Matthew 2:13, WEB)',
+            choices: [
+              { label: 'Rise at once, in the night', blessing: true, next: 'e2' }
+            ]
+          },
+          e2: { who: 'Narrator', text: 'He arose and took the young child and his mother by night and departed into Egypt. (Matthew 2:14)', end: true }
+        }, 'e1');
+      }, 900);
+    },
+
+    ev_faith1() {
+      DialogueSystem.start({
+        f1: {
+          who: 'Mary',
+          text: '“Joseph… the night is cold, and the road is long.”',
+          choices: [
+            { label: '“The God who warned us will keep us. Every mile.”', blessing: true, next: 'f2' },
+            { label: '“Stay close. Keep the child warm.”', next: 'f2' }
+          ]
+        },
+        f2: { who: 'Narrator', text: 'The little family presses on beneath the desert stars.', end: true }
+      }, 'f1');
+    },
+
+    ev_faith2() {
+      DialogueSystem.start({
+        f1: {
+          who: 'Narrator',
+          text: 'The border of Egypt draws near. Behind you, torchlight sweeps the hills of Judea.',
+          choices: [
+            { label: 'Give thanks — the Lord has been a shield', blessing: true, next: 'f2' },
+            { label: 'Hurry on in silence', next: 'f2' }
+          ]
+        },
+        f2: { who: 'Narrator', text: 'Dawn gathers pale gold at the edge of the sky.', end: true }
+      }, 'f1');
+    },
+
+    ev_egypt() {
+      this.arrived = true;
+      UI.setObjective('');
+      DialogueSystem.start({
+        r1: { who: 'Narrator', text: 'They remained in Egypt until the death of Herod, that it might be fulfilled which was spoken by the Lord through the prophet: “Out of Egypt I called my son.” (Matthew 2:15)', next: 'r2' },
+        r2: { who: 'Narrator', text: 'Then Herod, seeing that he was mocked by the wise men, was exceedingly angry, and sent and killed all the male children in Bethlehem. A voice was heard in Ramah — weeping and great mourning. (Matthew 2:16, 18)', next: 'r3' },
+        r3: { who: 'Narrator', text: 'But when Herod was dead, the angel came again in a dream: “Arise, and go into the land of Israel.” And they came and lived in a city called Nazareth — that it might be fulfilled: he will be called a Nazarene. (Matthew 2:19-23)', end: true }
+      }, 'r1', () => {
+        Game.showComplete(
+          'Scene 8 Complete &mdash; Flight to Egypt',
+          'The Messiah was kept safe, and every prophecy stood firm.<br><br>' +
+          'Blessings of faith: <b>' + Game.blessing + '</b><br>' +
+          'Scripture fragments: <b>' + Game.fragments.length + '</b>',
+          'epilogue'
+        );
+      });
+    },
+
+    update(dt) {
+      this.time += dt;
+
+      // Night → dawn as Egypt nears
+      const prog = Math.min(1, Math.max(0, (5 - this.player.position.z) / 110));
+      const night = new THREE.Color(0x0b101f), dawn = new THREE.Color(0xc98d5e);
+      const c = night.clone().lerp(dawn, Math.max(0, prog - 0.6) * 2.5);
+      Game.scene.background = c;
+      if (Game.scene.fog) Game.scene.fog.color.copy(c);
+
+      // Patrols sweep across the road
+      this.patrols.forEach(p => {
+        p.obj.position.x = Math.sin(this.time * 0.5 + p.phase) * 5;
+        p.obj.rotation.y = Math.cos(this.time * 0.5 + p.phase) > 0 ? Math.PI / 2 : -Math.PI / 2;
+        if (p.cooldown > 0) p.cooldown -= dt;
+      });
+
+      // Donkey follows
+      const ry = this.player.rotation.y;
+      const dir = new THREE.Vector3(Math.sin(ry), 0, Math.cos(ry));
+      const target = this.player.position.clone().addScaledVector(dir, -1.5);
+      target.x += 0.5;
+      this.donkeyG.position.lerp(target, Math.min(1, dt * 2.2));
+      this.donkeyG.rotation.y += (ry - this.donkeyG.rotation.y) * Math.min(1, dt * 2.5);
+
+      if (this.scrollProp) this.scrollProp.rotation.y += dt * 1.2;
+
+      if (Game.dialogueActive) return;
+
+      const lowWater = this.water <= 0;
+      const moving = Controller.update(this.player, dt, {
+        speed: lowWater ? 2.0 : 3.2, camDist: 5.6, camHeight: 2.4,
+        clamp: pos => {
+          pos.x = Math.max(-9, Math.min(9, pos.x));
+          pos.z = Math.max(-110, Math.min(7, pos.z));
+        }
+      });
+      if (moving) this.water = Math.max(0, this.water - dt * 1.4);
+      UI.setMeters('Water ' + Math.round(this.water) + (lowWater ? ' &mdash; <em>parched&hellip;</em>' : ''));
+
+      // Spotted by a patrol? Slip back into the shadows (forgiving, non-violent)
+      if (!this.arrived) {
+        for (const p of this.patrols) {
+          if (p.cooldown <= 0 && this.player.position.distanceTo(p.obj.position) < 4) {
+            p.cooldown = 3;
+            AudioEngine.drone(1.4);
+            this.player.position.z += 6;
+            this.donkeyG.position.z += 6;
+            UI.toast('&ldquo;Who goes there?!&rdquo; &mdash; You slip back into the shadows and wait for the patrol to pass.', 3200);
+            break;
+          }
+        }
+      }
+
+      for (const ev of this.events) {
+        if (!ev.done && this.player.position.z < ev.z) {
+          ev.done = true;
+          this['ev_' + ev.id]();
+          return;
+        }
+      }
+
+      let near = null;
+      if (this.wellProp && this.player.position.distanceTo(this.wellProp.position) < 2.3) near = 'well';
+      else if (this.scrollProp && this.player.position.distanceTo(this.scrollProp.position) < 1.8) near = 'scroll';
+
+      if (near !== this.nearest) {
+        this.nearest = near;
+        if (near) UI.show('interactBtn'); else UI.hide('interactBtn');
+      }
+      if (Input.consumeInteract() && near) {
+        this.nearest = null;
+        UI.hide('interactBtn');
+        if (near === 'well') {
+          this.water = 100;
+          AudioEngine.bell(660);
+          UI.toast('Cool water in the wilderness &mdash; you fill every skin.', 2800);
+        } else {
+          Game.scene.remove(this.scrollProp);
+          this.scrollProp = null;
+          Game.addFragment('Hosea 11:1',
+            '&ldquo;When Israel was a child, then I loved him, and called my son out of Egypt.&rdquo; (WEB)');
+        }
+      }
+    },
+
+    dispose() {
+      UI.hide('meters');
+    }
+  };
+
+  /* =====================================================
+     Epilogue — Jesus, the Light of the World
+  ===================================================== */
+  const Epilogue = {
+    label: 'Epilogue — The Light of the World',
+    star: null, time: 0, camT: 0, dest: null,
+
+    build() {
+      const s = Game.scene;
+      while (s.children.length) s.remove(s.children[0]);
+      s.background = new THREE.Color(0x0b1122);
+      s.fog = new THREE.Fog(0x0b1122, 40, 90);
+
+      s.add(new THREE.AmbientLight(0xbfc8e8, 0.25));
+      const moon = new THREE.DirectionalLight(0x9fb2dd, 0.3);
+      moon.position.set(-6, 14, 4);
+      s.add(moon);
+
+      const ground = new THREE.Mesh(new THREE.PlaneGeometry(140, 140),
+        new THREE.MeshLambertMaterial({ color: 0x3f3a2e }));
+      ground.rotation.x = -Math.PI / 2;
+      s.add(ground);
+
+      // Nazareth sleeping below
+      for (let i = 0; i < 12; i++) {
+        const h = Assets.house();
+        h.position.set((Math.random() - 0.5) * 34, 0, -4 - Math.random() * 22);
+        h.rotation.y = Math.random() * Math.PI;
+        s.add(h);
+      }
+      for (let i = 0; i < 6; i++) {
+        const t = Assets.tree();
+        t.position.set((Math.random() - 0.5) * 50, 0, -Math.random() * 30);
+        s.add(t);
+      }
+
+      this.star = Assets.star();
+      this.star.scale.setScalar(2.2);
+      this.star.position.set(0, 18, -16);
+      s.add(this.star);
+
+      this.time = 0; this.camT = 0; this.dest = null;
+      UI.setObjective('');
+      UI.setHint('');
+      Game.camera.position.set(0, 2.5, 12);
+      Game.camera.lookAt(0, 4, -10);
+
+      setTimeout(() => this.narration(), 1400);
+    },
+
+    narration() {
+      DialogueSystem.start({
+        p1: { who: 'Narrator', text: 'The child grew, and was becoming strong in spirit, being filled with wisdom, and the grace of God was upon him. (Luke 2:40, WEB)', next: 'p2' },
+        p2: { who: 'Jesus, in the years to come', text: '“I am the light of the world. He who follows me will not walk in the darkness, but will have the light of life.” (John 8:12)', next: 'p3' },
+        p3: { who: 'Narrator', text: 'The light shines in the darkness, and the darkness hasn’t overcome it. (John 1:5)', next: 'p4' },
+        p4: {
+          who: 'Narrator',
+          text: 'This Savior was born for you. The invitation of that first Christmas still stands — come, and follow him.',
+          choices: [
+            { label: 'Walk the Prophecy Hall — every promise kept', next: 'p5a' },
+            { label: 'Rest here, and let the credits roll', next: 'p5b' }
+          ]
+        },
+        p5a: { who: 'Narrator', text: 'Five promises, spoken centuries apart — all kept in one small child.', end: true, action: () => { this.dest = 'hall'; } },
+        p5b: { who: 'Narrator', text: 'Glory to God in the highest.', end: true, action: () => { this.dest = 'credits'; } }
+      }, 'p1', () => {
+        if (this.dest === 'hall') SceneManager.goto('hall');
+        else Game.showCredits();
+      });
+    },
+
+    update(dt) {
+      this.time += dt;
+      // Slow cinematic rise toward the star
+      this.camT = Math.min(1, this.camT + dt * 0.02);
+      const e = this.camT * this.camT * (3 - 2 * this.camT);
+      Game.camera.position.set(0, 2.5 + e * 12, 12 + e * 9);
+      Game.camera.lookAt(0, 4 + e * 12, -16);
+      if (this.star) {
+        const pulse = 2.2 + Math.sin(this.time * 1.6) * 0.25;
+        this.star.scale.setScalar(pulse);
+        this.star.userData.light.intensity = 0.9 + Math.sin(this.time * 1.6) * 0.35;
+        this.star.rotation.y += dt * 0.3;
+      }
+    },
+
+    dispose() {}
+  };
+
+  /* =====================================================
+     The Prophecy Hall — fulfilled promises gallery
+  ===================================================== */
+  const Hall = {
+    label: 'The Prophecy Hall',
+    player: null, pedestals: [], exitArch: null,
+    time: 0, nearest: null,
+    data: [
+      {
+        ref: 'Isaiah 7:14', scene: 'Scene 1 (Mary’s home)',
+        prophecy: '“Therefore the Lord himself will give you a sign. Behold, the virgin will conceive, and bear a son, and shall call his name Immanuel.”',
+        fulfilled: 'Fulfilled: “That which is conceived in her is of the Holy Spirit… they shall call his name Immanuel — which is, God with us.” (Matthew 1:20-23)'
+      },
+      {
+        ref: 'Matthew 1:1', scene: 'Scene 2 (the workshop)',
+        prophecy: '“The book of the genealogy of Jesus Christ, the son of David, the son of Abraham.”',
+        fulfilled: 'Fulfilled: the covenant promise to Abraham and the everlasting throne of David meet in Jesus. (Luke 1:32-33)'
+      },
+      {
+        ref: 'Micah 5:2', scene: 'Scene 3 (the road)',
+        prophecy: '“But you, Bethlehem Ephrathah… out of you one will come out to me that is to be ruler in Israel; whose goings out are from of old, from ancient times.”',
+        fulfilled: 'Fulfilled: “Joseph went up… to David’s city, which is called Bethlehem… and she gave birth to her firstborn son.” (Luke 2:4-7)'
+      },
+      {
+        ref: 'Isaiah 9:6', scene: 'Scene 5 (the fields)',
+        prophecy: '“For to us a child is born… His name will be called Wonderful Counselor, Mighty God, Everlasting Father, Prince of Peace.”',
+        fulfilled: 'Fulfilled: “There is born to you today, in David’s city, a Savior, who is Christ the Lord.” (Luke 2:11)'
+      },
+      {
+        ref: 'Hosea 11:1', scene: 'Scene 8 (the desert)',
+        prophecy: '“When Israel was a child, then I loved him, and called my son out of Egypt.”',
+        fulfilled: 'Fulfilled: “He arose and took the young child and his mother by night and departed into Egypt… ‘Out of Egypt I called my son.’” (Matthew 2:14-15)'
+      }
+    ],
+
+    build() {
+      const s = Game.scene;
+      while (s.children.length) s.remove(s.children[0]);
+      s.background = new THREE.Color(0x171320);
+      s.fog = new THREE.Fog(0x171320, 18, 42);
+
+      s.add(new THREE.AmbientLight(0xffe2b8, 0.4));
+      const soft = new THREE.DirectionalLight(0xfff3cf, 0.35);
+      soft.position.set(4, 10, 6);
+      s.add(soft);
+
+      const floor = new THREE.Mesh(new THREE.PlaneGeometry(34, 18),
+        new THREE.MeshLambertMaterial({ color: 0xbfb49a }));
+      floor.rotation.x = -Math.PI / 2;
+      s.add(floor);
+
+      for (let i = 0; i < 6; i++) {
+        const col = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.42, 5, 8),
+          new THREE.MeshLambertMaterial({ color: 0xa89a82 }));
+        col.position.set(-10 + i * 4, 2.5, -7);
+        s.add(col);
+      }
+
+      // Five pedestals — one per prophecy
+      this.pedestals = [];
+      this.data.forEach((d, i) => {
+        const x = -8 + i * 4;
+        const ped = new THREE.Group();
+        const base = new THREE.Mesh(new THREE.BoxGeometry(0.9, 1.0, 0.9),
+          new THREE.MeshLambertMaterial({ color: 0x8d8577 }));
+        base.position.y = 0.5;
+        const top = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.12, 1.1),
+          new THREE.MeshLambertMaterial({ color: 0xa89a82 }));
+        top.position.y = 1.06;
+        ped.add(base, top);
+        const collected = Game.fragments.some(f => f.ref === d.ref);
+        let icon;
+        if (collected) {
+          icon = Assets.scroll();
+          icon.position.y = 1.25;
+          const glow = new THREE.PointLight(0xffe1a0, 0.6, 4);
+          glow.position.y = 1.8;
+          ped.add(glow);
+        } else {
+          icon = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.3, 0.3),
+            new THREE.MeshLambertMaterial({ color: 0x555049 }));
+          icon.position.y = 1.28;
+        }
+        ped.add(icon);
+        ped.position.set(x, 0, -4);
+        s.add(ped);
+        this.pedestals.push({ obj: ped, icon, d, collected });
+      });
+
+      // Exit arch at the hall's end
+      this.exitArch = new THREE.Group();
+      const archMat = new THREE.MeshLambertMaterial({ color: 0xa89a82 });
+      const pl = new THREE.Mesh(new THREE.BoxGeometry(0.3, 2.8, 0.3), archMat);
+      pl.position.set(0, 1.4, -0.9);
+      const pr = pl.clone(); pr.position.z = 0.9;
+      const lintel = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.3, 2.2), archMat);
+      lintel.position.y = 2.9;
+      const glowPanel = new THREE.Mesh(new THREE.BoxGeometry(0.08, 2.6, 1.6),
+        new THREE.MeshBasicMaterial({ color: 0xffe9a3, transparent: true, opacity: 0.45 }));
+      glowPanel.position.y = 1.4;
+      this.exitArch.add(pl, pr, lintel, glowPanel);
+      this.exitArch.position.set(13, 0, -2);
+      s.add(this.exitArch);
+
+      // Player
+      this.player = Assets.person({ robe: 0x7a8db0, sash: 0xdfe6ef });
+      this.player.position.set(-12, 0, 0);
+      this.player.rotation.y = Math.PI / 2;
+      s.add(this.player);
+
+      this.time = 0; this.nearest = null;
+      Controller.reset(-Math.PI / 2, 0.3);
+      UI.setObjective('&#10022; Behold the promises &mdash; visit each pedestal &middot; the golden door leads on');
+      UI.toast('Your lantern of faith burns with <b>' + Game.blessing + '</b> blessing' +
+        (Game.blessing === 1 ? '' : 's') + '. Walk among the promises of God.', 4600);
+    },
+
+    pedestalDialogue(p) {
+      if (p.collected) {
+        DialogueSystem.start({
+          q1: { who: p.d.ref + ' — the promise', text: p.d.prophecy, next: 'q2' },
+          q2: { who: 'The fulfillment', text: p.d.fulfilled, end: true }
+        }, 'q1');
+      } else {
+        DialogueSystem.start({
+          q1: { who: 'An empty pedestal', text: 'A scripture fragment rests undiscovered in ' + p.d.scene + '. Play again, and search with care.', end: true }
+        }, 'q1');
+      }
+    },
+
+    update(dt) {
+      this.time += dt;
+      this.pedestals.forEach(p => {
+        if (p.collected) p.icon.rotation.y += dt * 1.2;
+      });
+
+      if (Game.dialogueActive) return;
+
+      Controller.update(this.player, dt, {
+        speed: 2.8, camDist: 4.6, camHeight: 2.0, maxPitch: 0.8,
+        clamp: pos => {
+          pos.x = Math.max(-14, Math.min(14, pos.x));
+          pos.z = Math.max(-6.5, Math.min(3, pos.z));
+        }
+      });
+
+      let near = null;
+      for (const p of this.pedestals) {
+        if (this.player.position.distanceTo(p.obj.position) < 1.8) { near = p; break; }
+      }
+      if (!near && this.player.position.distanceTo(this.exitArch.position) < 2.2) near = 'exit';
+
+      if (near !== this.nearest) {
+        this.nearest = near;
+        if (near) UI.show('interactBtn'); else UI.hide('interactBtn');
+      }
+      if (Input.consumeInteract() && near) {
+        this.nearest = null;
+        UI.hide('interactBtn');
+        if (near === 'exit') {
+          UI.setObjective('');
+          Game.showCredits();
+        } else {
+          AudioEngine.bell(near.collected ? 1180 : 440);
+          this.pedestalDialogue(near);
+        }
+      }
+    },
+
+    dispose() {}
+  };
+
+  /* =====================================================
+     Game — boot, loop, pause
+  ===================================================== */
+  const Game = {
+    renderer: null, scene: null, camera: null, clock: null,
+    running: false, paused: false, dialogueActive: false,
+    blessing: 0, fragments: [],
+    reducedMotion: false, bigText: false,
+    _fpsAcc: 0, _fpsN: 0, _fpsLow: 0, _qualityStepped: false, _wasPortrait: false,
+
+    addBlessing() {
+      this.blessing++;
+      UI.toast('&#10022; A blessing of faith received (' + this.blessing + ')', 2200);
+    },
+
+    addFragment(ref, text) {
+      this.fragments.push({ ref, text });
+      AudioEngine.bell(1180);
+      UI.toast('Scripture fragment collected: <b>' + ref + '</b> &mdash; see the Journal in the menu', 3800);
+    },
+
+    showCredits() {
+      this.dialogueActive = true;
+      AudioEngine.startMusic('lullaby');
+      document.getElementById('creditsBody').innerHTML =
+        '<em>&ldquo;For there is born to you today, in David&rsquo;s city, a Savior, who is Christ the Lord.&rdquo;</em><br><br>' +
+        'Blessings of faith gathered: <b>' + this.blessing + '</b><br>' +
+        'Scripture fragments found: <b>' + this.fragments.length + ' / 5</b><br><br>' +
+        (this.fragments.length < 5
+          ? 'Some fragments remain undiscovered &mdash; play again and search every scene.<br><br>'
+          : 'Every prophecy found &mdash; well done, good and faithful servant!<br><br>') +
+        'Scripture quotations from the World English Bible (public domain).<br>' +
+        'A Bible-story adventure in eight scenes &middot; Luke 1&ndash;2 &amp; Matthew 1&ndash;2.<br>' +
+        'Built with Three.js and the Web Audio API in a single file.';
+      UI.show('credits');
+    },
+
+    async resetState() {
+      this.blessing = 0;
+      this.fragments = [];
+      this.nextScene = null;
+      await SceneManager.goto('scene1');
+    },
+
+    nextScene: null,
+    showComplete(title, html, next) {
+      this.nextScene = next || 'test';
+      this.dialogueActive = true;
+      document.getElementById('completeTitle').innerHTML = title;
+      document.getElementById('completeBody').innerHTML = html;
+      UI.show('complete');
+    },
+
+    boot() {
+      const canvas = document.getElementById('game');
+      const isMobile = Input.isTouchDevice;
+
+      this.renderer = new THREE.WebGLRenderer({ canvas, antialias: !isMobile });
+      this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      this.renderer.setSize(window.innerWidth, window.innerHeight);
+
+      this.scene = new THREE.Scene();
+      this.camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 120);
+      this.clock = new THREE.Clock();
+
+      Input.init(canvas);
+      SceneManager.register('test', TestScene);
+      SceneManager.register('scene1', Scene1);
+      SceneManager.register('scene2', Scene2);
+      SceneManager.register('scene3', Scene3);
+      SceneManager.register('scene4', Scene4);
+      SceneManager.register('scene5', Scene5);
+      SceneManager.register('scene6', Scene6);
+      SceneManager.register('scene7', Scene7);
+      SceneManager.register('scene8', Scene8);
+      SceneManager.register('epilogue', Epilogue);
+      SceneManager.register('hall', Hall);
+
+      window.addEventListener('resize', () => {
+        this.camera.aspect = window.innerWidth / window.innerHeight;
+        this.camera.updateProjectionMatrix();
+        this.renderer.setSize(window.innerWidth, window.innerHeight);
+        // Suggest landscape when a touch device rotates to portrait
+        const portrait = window.innerHeight > window.innerWidth;
+        if (portrait && !this._wasPortrait && Input.isTouchDevice && this.running)
+          UI.toast('Tip: rotate your device to landscape for the best view.', 3500);
+        this._wasPortrait = portrait;
+      });
+      this._wasPortrait = window.innerHeight > window.innerWidth;
+
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) { AudioEngine.suspend(); }
+        else if (!this.paused) { AudioEngine.resume(); }
+      });
+
+      // iOS Safari can suspend audio unexpectedly — nudge it back on any gesture
+      const kickAudio = () => { if (this.running && !this.paused) AudioEngine.resume(); };
+      document.addEventListener('touchstart', kickAudio, { passive: true });
+      document.addEventListener('mousedown', kickAudio);
+
+      // No long-press context menu over the game canvas
+      canvas.addEventListener('contextmenu', e => e.preventDefault());
+
+      // Honor the system reduced-motion preference
+      if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        this.reducedMotion = true;
+        document.body.classList.add('reducedMotion');
+        document.getElementById('motionBtn').textContent = 'Motion: Reduced';
+      }
+
+      UI.hide('loadMsg');
+      UI.show('title');
+    },
+
+    async start() {
+      AudioEngine.unlock();       // must happen inside the user gesture (iOS)
+      AudioEngine.bell(880);      // audible confirmation that audio is live
+      UI.hide('title');
+      UI.show('hud');
+      // QA shortcut: open index.html#scene3 (etc.) to jump straight to a scene
+      const hash = (location.hash || '').replace('#', '');
+      await SceneManager.goto(SceneManager.scenes[hash] ? hash : 'scene1');
+      this.running = true;
+      this.loop();
+    },
+
+    loop() {
+      requestAnimationFrame(() => this.loop());
+      if (!this.running || this.paused) return;
+      const dt = Math.min(this.clock.getDelta(), 0.05);
+      Input.update();
+      SceneManager.update(dt);
+      const sc = SceneManager.current;
+      if (this.glowLight && sc && sc.player) {
+        this.glowLight.position.set(sc.player.position.x, sc.player.position.y + 1.9, sc.player.position.z);
+        this.glowLight.intensity = Math.min(1.1, this.blessing * 0.09);
+      }
+      this.renderer.render(this.scene, this.camera);
+
+      // Auto quality step-down: sustained low FPS → drop pixel ratio once
+      if (!this._qualityStepped) {
+        this._fpsAcc += dt;
+        this._fpsN++;
+        if (this._fpsAcc >= 2) {
+          const fps = this._fpsN / this._fpsAcc;
+          this._fpsAcc = 0;
+          this._fpsN = 0;
+          this._fpsLow = fps < 26 ? this._fpsLow + 1 : 0;
+          if (this._fpsLow >= 2) {
+            this._qualityStepped = true;
+            this.renderer.setPixelRatio(1);
+          }
+        }
+      }
+    },
+
+    togglePause() {
+      if (!this.running) return;
+      this.paused = !this.paused;
+      if (this.paused) { UI.show('pause'); AudioEngine.suspend(); }
+      else { UI.hide('pause'); AudioEngine.resume(); this.clock.getDelta(); }
+    }
+  };
+
+  /* =====================================================
+     Wire up UI events
+  ===================================================== */
+  document.getElementById('tapBegin').addEventListener('click', () => Game.start());
+  document.getElementById('menuBtn').addEventListener('click', () => Game.togglePause());
+  document.getElementById('resumeBtn').addEventListener('click', () => Game.togglePause());
+  document.getElementById('interactBtn').addEventListener('click', () => { Input.interactPressed = true; });
+  document.getElementById('volMusic').addEventListener('input', e => AudioEngine.setMusicVolume(e.target.value / 100));
+  document.getElementById('volSfx').addEventListener('input', e => AudioEngine.setSfxVolume(e.target.value / 100));
+  document.getElementById('textSizeBtn').addEventListener('click', e => {
+    Game.bigText = !Game.bigText;
+    document.body.classList.toggle('bigText', Game.bigText);
+    e.target.textContent = 'Text Size: ' + (Game.bigText ? 'Large' : 'Normal');
+  });
+  document.getElementById('motionBtn').addEventListener('click', e => {
+    Game.reducedMotion = !Game.reducedMotion;
+    document.body.classList.toggle('reducedMotion', Game.reducedMotion);
+    e.target.textContent = 'Motion: ' + (Game.reducedMotion ? 'Reduced' : 'Full');
+  });
+  // SFX test buttons (resume audio briefly while paused so tests are audible)
+  const testSfx = fn => { AudioEngine.resume(); fn(); setTimeout(() => { if (Game.paused) AudioEngine.suspend(); }, 3000); };
+  document.getElementById('sfxBell').addEventListener('click', () => testSfx(() => AudioEngine.bell()));
+  document.getElementById('sfxShimmer').addEventListener('click', () => testSfx(() => AudioEngine.shimmer()));
+  document.getElementById('sfxStep').addEventListener('click', () => testSfx(() => AudioEngine.footstep()));
+
+  // Dialogue: tap panel to complete the typewriter text
+  document.getElementById('dialogue').addEventListener('click', () => DialogueSystem.skip());
+
+  // Verse journal
+  document.getElementById('journalBtn').addEventListener('click', () => {
+    const list = document.getElementById('journalList');
+    list.innerHTML = Game.fragments.length
+      ? Game.fragments.map(f => '<div class="fragment"><b>' + f.ref + '</b><br>' + f.text + '</div>').join('')
+      : '<p style="opacity:.7">No Scripture fragments collected yet. Look for glowing scrolls.</p>';
+    UI.show('journal');
+  });
+  document.getElementById('journalClose').addEventListener('click', () => UI.hide('journal'));
+
+  // Scene completion → next scene in the story
+  document.getElementById('completeBtn').addEventListener('click', async () => {
+    UI.hide('complete');
+    Game.dialogueActive = false;
+    await SceneManager.goto(Game.nextScene || 'test');
+  });
+
+  // Credits buttons
+  document.getElementById('creditsReplayBtn').addEventListener('click', async () => {
+    UI.hide('credits');
+    Game.dialogueActive = false;
+    await Game.resetState();
+  });
+  document.getElementById('creditsExploreBtn').addEventListener('click', async () => {
+    UI.hide('credits');
+    Game.dialogueActive = false;
+    await SceneManager.goto('test');
+    UI.toast('Bethlehem&rsquo;s outskirts &mdash; wander freely. Open the menu to replay from the credits any time.', 4600);
+  });
+  document.getElementById('creditsHallBtn').addEventListener('click', async () => {
+    UI.hide('credits');
+    Game.dialogueActive = false;
+    await SceneManager.goto('hall');
+  });
+
+  Game.boot();
+})();
+</script>
+</body>
+</html>
