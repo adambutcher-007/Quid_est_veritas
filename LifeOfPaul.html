@@ -1,0 +1,2145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Life of Paul — A Collection</title>
+<style>
+/* ============================================================
+   PALETTE — "Gold Rare"
+   ============================================================ */
+:root{
+  --bg:#1E1A14;
+  --bg-deep:#141210;
+  --surface:#2A2418;
+  --surface-2:#332B1D;
+  --text:#F2E8CC;
+  --text-dim:#B8A97F;
+  --gold:#C9A227;
+  --gold-lt:#E8CE72;
+  --gold-dk:#7A6318;
+  --accent:#8A6ACC;
+  --accent-dk:#4B3878;
+  --bronze:#8A6A3C;
+  --silver:#A9AEB4;
+  --tarnish:#5A5348;
+  --ease:cubic-bezier(.22,.61,.36,1);
+  --serif:"Cinzel","Trajan Pro",Georgia,"Times New Roman",serif;
+  --body-serif:"EB Garamond",Georgia,"Times New Roman",serif;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  background:
+    radial-gradient(1200px 700px at 50% -10%, #2A2418 0%, transparent 60%),
+    radial-gradient(900px 600px at 90% 110%, #241f16 0%, transparent 55%),
+    var(--bg);
+  color:var(--text);
+  font-family:var(--body-serif);
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+body::before{ /* parchment tooth */
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.05;
+  background-image:radial-gradient(circle at 1px 1px, #F2E8CC 1px, transparent 0);
+  background-size:4px 4px;
+}
+button{font-family:inherit;color:inherit;background:none;border:none;cursor:pointer}
+:focus-visible{outline:2px solid var(--gold-lt);outline-offset:3px;border-radius:2px}
+
+/* ============================================================
+   ORNAMENT HELPERS
+   ============================================================ */
+.rule{height:1px;background:linear-gradient(90deg,transparent,var(--gold-dk) 15%,var(--gold) 50%,var(--gold-dk) 85%,transparent);border:none}
+.diamond{color:var(--gold);font-size:.7em;vertical-align:middle}
+
+/* ============================================================
+   CHROME / HEADER
+   ============================================================ */
+.topbar{
+  position:sticky;top:0;z-index:60;
+  display:flex;align-items:center;gap:18px;flex-wrap:wrap;
+  padding:12px 22px;
+  background:linear-gradient(180deg,rgba(20,18,16,.96),rgba(20,18,16,.78));
+  backdrop-filter:blur(10px);
+  border-bottom:1px solid rgba(201,162,39,.28);
+}
+.brand{font-family:var(--serif);letter-spacing:.14em;text-transform:uppercase;font-size:13px;color:var(--gold-lt);white-space:nowrap}
+.brand small{display:block;letter-spacing:.28em;font-size:8px;color:var(--text-dim);margin-top:2px}
+.nav{display:flex;gap:4px;flex-wrap:wrap}
+.nav button{
+  font-family:var(--serif);font-size:11px;letter-spacing:.12em;text-transform:uppercase;
+  padding:7px 13px;border:1px solid transparent;color:var(--text-dim);border-radius:2px;transition:.25s var(--ease);
+}
+.nav button:hover{color:var(--text);border-color:rgba(201,162,39,.3)}
+.nav button[aria-current="true"]{
+  color:#1E1A14;border-color:var(--gold);
+  background:linear-gradient(180deg,var(--gold-lt),var(--gold) 60%,var(--gold-dk));
+  box-shadow:0 0 14px rgba(201,162,39,.35);
+}
+.spacer{flex:1}
+.toggles{display:flex;gap:8px;align-items:center}
+.tog{
+  display:flex;align-items:center;gap:7px;
+  font-family:var(--serif);font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+  padding:6px 12px;border:1px solid rgba(201,162,39,.32);border-radius:2px;color:var(--text-dim);
+  transition:.25s var(--ease);white-space:nowrap;
+}
+.tog:hover{color:var(--text);border-color:var(--gold)}
+.tog[aria-pressed="true"]{color:var(--gold-lt);border-color:var(--gold);box-shadow:inset 0 0 18px rgba(201,162,39,.18)}
+.tog .dot{width:7px;height:7px;border-radius:50%;background:var(--tarnish);transition:.3s}
+.tog[aria-pressed="true"] .dot{background:var(--gold-lt);box-shadow:0 0 8px var(--gold)}
+.count{font-family:var(--serif);font-size:10px;letter-spacing:.14em;color:var(--text-dim)}
+.count b{color:var(--gold-lt);font-size:13px}
+
+/* ============================================================
+   CARD — TCG ANATOMY
+   ============================================================ */
+.card{
+  --rx:0deg;--ry:0deg;--mx:50%;--my:50%;
+  position:relative;width:100%;aspect-ratio:5/7.1;
+  transform-style:preserve-3d;
+  transform:perspective(900px) rotateX(var(--rx)) rotateY(var(--ry));
+  transition:transform .35s var(--ease), box-shadow .35s var(--ease);
+  cursor:pointer;border-radius:9px;
+  will-change:transform;
+}
+.card.tilting{transition:transform .08s linear}
+
+/* frame metal */
+.frame{
+  position:absolute;inset:0;border-radius:9px;padding:7px;
+  display:flex;flex-direction:column;
+  background:
+    linear-gradient(150deg,var(--f-hi) 0%,var(--f-mid) 22%,var(--f-lo) 45%,var(--f-mid) 62%,var(--f-hi) 100%);
+  box-shadow:
+    0 1px 0 rgba(255,255,255,.22) inset,
+    0 -1px 0 rgba(0,0,0,.5) inset,
+    0 14px 30px -12px rgba(0,0,0,.9);
+}
+/* rarity treatments */
+.card[data-rarity="common"]{--f-hi:#B08A54;--f-mid:#8A6A3C;--f-lo:#5C4526}
+.card[data-rarity="rare"]{--f-hi:#D6DCE2;--f-mid:#A9AEB4;--f-lo:#6E747A}
+.card[data-rarity="gold"]{--f-hi:#F0D98A;--f-mid:#C9A227;--f-lo:#6E5713}
+/* tarnish state — God's will resisted */
+.card[data-will="resisted"]{--f-hi:#6E6558;--f-mid:#4E4738;--f-lo:#332E26}
+.card[data-will="resisted"] .frame{box-shadow:0 1px 0 rgba(255,255,255,.07) inset,0 -1px 0 rgba(0,0,0,.6) inset,0 12px 26px -12px rgba(0,0,0,.9)}
+/* weathered gold — hidden / refining */
+.card[data-will="hidden"] .frame::after{
+  content:"";position:absolute;inset:0;border-radius:9px;pointer-events:none;
+  background:repeating-linear-gradient(115deg,transparent 0 9px,rgba(0,0,0,.16) 9px 10px);
+  mix-blend-mode:multiply;
+}
+
+.card:hover{box-shadow:0 0 40px -6px rgba(201,162,39,.3)}
+.card[data-rarity="gold"]:hover{box-shadow:0 0 55px -4px rgba(201,162,39,.5)}
+
+.inner{
+  position:relative;flex:1;display:flex;flex-direction:column;
+  background:linear-gradient(180deg,var(--surface),#221d13);
+  border-radius:4px;overflow:hidden;
+  box-shadow:0 0 0 1px rgba(0,0,0,.55), 0 0 14px rgba(0,0,0,.5) inset;
+}
+
+/* --- name bar --- */
+.namebar{
+  display:flex;align-items:center;gap:6px;
+  padding:5px 8px 4px;
+  background:linear-gradient(180deg,rgba(0,0,0,.42),rgba(0,0,0,.12));
+  border-bottom:1px solid rgba(201,162,39,.28);
+}
+.cname{
+  flex:1;font-family:var(--serif);font-weight:600;
+  font-size:clamp(9px,1.05cqw,12px);
+  letter-spacing:.04em;line-height:1.15;color:var(--text);
+  text-shadow:0 1px 0 rgba(0,0,0,.7);
+  overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+}
+.cdate{
+  font-family:var(--serif);font-size:8px;letter-spacing:.06em;
+  color:var(--gold-lt);white-space:nowrap;opacity:.9;
+}
+.card[data-will="resisted"] .cdate{color:#B9AEC9}
+
+/* --- art window --- */
+.art{
+  position:relative;aspect-ratio:16/11;margin:5px 5px 0;border-radius:2px;overflow:hidden;
+  background:var(--bg-deep);
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,.8),
+    0 0 0 2px rgba(201,162,39,.30),
+    0 2px 8px rgba(0,0,0,.7) inset;
+}
+.art svg{display:block;width:100%;height:100%;transition:filter .5s var(--ease)}
+
+/* --- FOIL SHEEN (God's-will axis) --- */
+.foil{
+  position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(
+     var(--foil-angle,115deg),
+     transparent 30%,
+     rgba(255,120,120,.30) 38%,
+     rgba(255,225,120,.42) 44%,
+     rgba(150,255,190,.34) 50%,
+     rgba(140,215,255,.34) 56%,
+     rgba(190,150,255,.30) 62%,
+     transparent 70%);
+  background-size:260% 260%;
+  mix-blend-mode:overlay;
+  opacity:0;
+}
+/* advancing — full bright sweep */
+.card[data-will="advancing"] .foil{opacity:.95;animation:sweep 4.6s linear infinite}
+.card[data-rarity="gold"][data-will="advancing"] .foil{opacity:1;animation-duration:3.4s}
+/* hidden — slow, dim, builds then flares */
+.card[data-will="hidden"] .foil{opacity:.5;animation:sweepSlow 9s ease-in-out infinite}
+/* resisted — no rainbow; a wrong-way violet haze */
+.card[data-will="resisted"] .foil{
+  opacity:.75;mix-blend-mode:screen;
+  background:linear-gradient(295deg,transparent 34%,rgba(138,106,204,.42) 48%,rgba(75,56,120,.30) 56%,transparent 68%);
+  background-size:230% 230%;
+  animation:sweepBack 7s linear infinite;
+}
+@keyframes sweep{0%{background-position:170% 170%}100%{background-position:-70% -70%}}
+@keyframes sweepSlow{
+  0%{background-position:160% 160%;opacity:.16}
+  62%{opacity:.42}
+  84%{opacity:.9}
+  100%{background-position:-60% -60%;opacity:.16}
+}
+@keyframes sweepBack{0%{background-position:-60% -60%}100%{background-position:170% 170%}}
+
+/* gold-rare corner glints */
+.card[data-rarity="gold"] .art::after{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(circle at var(--mx) var(--my),rgba(255,240,190,.24),transparent 42%);
+}
+
+/* --- type line --- */
+.typeline{
+  display:flex;align-items:center;gap:6px;margin:5px 6px 0;padding:3px 6px;
+  background:linear-gradient(180deg,rgba(201,162,39,.16),rgba(0,0,0,.28));
+  border-top:1px solid rgba(201,162,39,.35);
+  border-bottom:1px solid rgba(0,0,0,.6);
+  border-radius:1px;
+}
+.ttext{flex:1;font-family:var(--serif);font-size:7.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--text-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.willicon{font-size:9px;line-height:1}
+.card[data-will="advancing"] .willicon{color:var(--gold-lt);text-shadow:0 0 7px var(--gold)}
+.card[data-will="hidden"] .willicon{color:var(--gold-dk)}
+.card[data-will="resisted"] .willicon{color:var(--accent)}
+
+/* --- text box --- */
+.textbox{flex:1;display:flex;flex-direction:column;gap:3px;padding:6px 9px 4px;min-height:0}
+.btext{font-size:8.5px;line-height:1.42;color:var(--text);opacity:.92;overflow:hidden;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical}
+.flavour{
+  margin-top:auto;padding-top:4px;border-top:1px solid rgba(201,162,39,.18);
+  font-style:italic;font-size:8px;line-height:1.4;color:var(--gold-lt);opacity:.85;
+  overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+}
+.card[data-will="resisted"] .flavour{color:#BCAFD6}
+
+/* --- stat corner --- */
+.statbar{
+  display:flex;align-items:stretch;
+  border-top:1px solid rgba(0,0,0,.6);
+  background:linear-gradient(180deg,rgba(0,0,0,.30),rgba(0,0,0,.5));
+}
+.stag{flex:1;padding:3px 8px;font-family:var(--serif);font-size:7px;letter-spacing:.13em;text-transform:uppercase;color:var(--text-dim);align-self:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.statnum{
+  width:26px;display:grid;place-items:center;
+  font-family:var(--serif);font-size:11px;font-weight:700;color:#1E1A14;
+  background:linear-gradient(150deg,var(--f-hi),var(--f-mid) 55%,var(--f-lo));
+  box-shadow:-1px 0 0 rgba(0,0,0,.55), 0 1px 0 rgba(255,255,255,.2) inset;
+}
+.card[data-will="resisted"] .statnum{color:#D6CEE6}
+
+/* ornate frame corners */
+.frame::before{
+  content:"";position:absolute;inset:3px;border-radius:7px;pointer-events:none;
+  border:1px solid rgba(255,255,255,.16);
+  -webkit-mask:linear-gradient(#000,#000) content-box, linear-gradient(#000,#000);
+}
+.corner{position:absolute;width:13px;height:13px;pointer-events:none;opacity:.85}
+.corner svg{width:100%;height:100%}
+.c-tl{top:2px;left:2px}
+.c-tr{top:2px;right:2px;transform:scaleX(-1)}
+.c-bl{bottom:2px;left:2px;transform:scaleY(-1)}
+.c-br{bottom:2px;right:2px;transform:scale(-1,-1)}
+
+/* locked / unrevealed */
+.card.locked .inner{filter:brightness(.4) saturate(.3)}
+.card.locked::after{
+  content:"✦";position:absolute;inset:0;display:grid;place-items:center;
+  font-size:30px;color:rgba(201,162,39,.5);pointer-events:none;
+}
+
+/* ============================================================
+   SHOW GOD'S HAND
+   ============================================================ */
+body.godhand .art svg{filter:grayscale(1) brightness(.32) contrast(.85)}
+body.godhand .card[data-will="advancing"] .foil{opacity:1;filter:saturate(1.5) brightness(1.5)}
+body.godhand .card[data-will="hidden"] .foil{opacity:.85;filter:brightness(1.35)}
+body.godhand .card[data-will="resisted"] .foil{opacity:.9}
+body.godhand .inner{background:linear-gradient(180deg,#1a170f,#141210)}
+body.godhand .btext,body.godhand .flavour{opacity:.35}
+body.godhand .card[data-will="advancing"]{box-shadow:0 0 46px -8px rgba(201,162,39,.55)}
+
+/* container queries for card type scaling */
+.card{container-type:inline-size}
+
+/* ============================================================
+   VIEWS
+   ============================================================ */
+.view{display:none;position:relative;z-index:1}
+.view.on{display:block;animation:fadeUp .5s var(--ease)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.wrap{max-width:1320px;margin:0 auto;padding:26px 22px 90px}
+
+/* --- TITLE --- */
+#v-title .wrap{min-height:calc(100vh - 62px);display:grid;place-items:center;padding-top:10px}
+.hero{text-align:center;display:grid;justify-items:center;gap:22px}
+.hero .heroCard{width:min(300px,62vw);animation:float 7s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-13px)}}
+.hero h1{
+  font-family:var(--serif);font-weight:600;letter-spacing:.16em;text-transform:uppercase;
+  font-size:clamp(24px,5vw,46px);color:var(--text);
+  text-shadow:0 0 26px rgba(201,162,39,.35);
+}
+.hero h1 em{display:block;font-style:normal;font-size:.42em;letter-spacing:.4em;color:var(--gold);margin-top:10px}
+.hero p{max-width:46ch;color:var(--text-dim);font-size:15px;line-height:1.65;font-style:italic}
+.seal{
+  position:relative;width:132px;height:132px;display:grid;place-items:center;
+  font-family:var(--serif);font-size:13px;letter-spacing:.2em;text-transform:uppercase;color:#2A1E08;
+  background:radial-gradient(circle at 34% 30%,var(--gold-lt),var(--gold) 46%,#6E5713 100%);
+  border-radius:50%;
+  box-shadow:0 0 0 3px rgba(201,162,39,.28),0 0 34px rgba(201,162,39,.4),0 10px 26px rgba(0,0,0,.6);
+  transition:.3s var(--ease);
+}
+.seal:hover{transform:scale(1.06);box-shadow:0 0 0 3px rgba(232,206,114,.5),0 0 54px rgba(201,162,39,.6),0 10px 26px rgba(0,0,0,.6)}
+.seal::before{content:"";position:absolute;inset:9px;border:1px solid rgba(42,30,8,.4);border-radius:50%}
+
+/* --- GALLERY --- */
+.filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:4px 0 22px}
+.flabel{font-family:var(--serif);font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold-dk);margin-right:2px}
+.chip{
+  font-family:var(--serif);font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+  padding:5px 12px;border:1px solid rgba(201,162,39,.26);border-radius:999px;color:var(--text-dim);transition:.22s var(--ease);
+}
+.chip:hover{color:var(--text);border-color:var(--gold)}
+.chip[aria-pressed="true"]{color:#1E1A14;background:linear-gradient(180deg,var(--gold-lt),var(--gold));border-color:var(--gold-lt)}
+.chip.vio[aria-pressed="true"]{background:linear-gradient(180deg,#A98BE0,var(--accent));color:#150F24;border-color:#A98BE0}
+.sep{width:1px;height:18px;background:rgba(201,162,39,.25);margin:0 4px}
+
+.actHead{display:flex;align-items:center;gap:14px;margin:34px 0 16px}
+.actHead h2{font-family:var(--serif);font-size:14px;letter-spacing:.26em;text-transform:uppercase;color:var(--gold-lt);white-space:nowrap}
+.actHead .num{font-family:var(--serif);font-size:10px;letter-spacing:.2em;color:var(--gold-dk)}
+.actHead .rule{flex:1}
+
+.grid{display:grid;gap:20px;grid-template-columns:repeat(auto-fill,minmax(196px,1fr))}
+.grid .card{animation:pop .5s var(--ease) backwards}
+@keyframes pop{from{opacity:0;transform:scale(.93) translateY(10px)}to{opacity:1}}
+
+/* --- DETAIL MODAL --- */
+.modal{
+  position:fixed;inset:0;z-index:90;display:none;place-items:center;padding:24px;
+  background:radial-gradient(900px 700px at 50% 50%,rgba(30,26,20,.86),rgba(10,9,7,.96));
+  backdrop-filter:blur(7px);
+}
+.modal.on{display:grid;animation:fadeUp .3s var(--ease)}
+.flipper{position:relative;width:min(360px,86vw);aspect-ratio:5/7.1;transform-style:preserve-3d;transition:transform .75s var(--ease)}
+.flipper.flipped{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;backface-visibility:hidden}
+.face.back{transform:rotateY(180deg)}
+.face.back .card{cursor:default}
+.detail{
+  position:absolute;inset:0;border-radius:9px;padding:7px;
+  background:linear-gradient(150deg,var(--f-hi,#F0D98A),var(--f-mid,#C9A227) 40%,var(--f-lo,#6E5713));
+  box-shadow:0 14px 30px -12px rgba(0,0,0,.9);
+}
+.detail .inner{padding:16px 15px;gap:9px;overflow-y:auto;display:flex;flex-direction:column}
+.detail h3{font-family:var(--serif);font-size:15px;letter-spacing:.05em;color:var(--gold-lt);line-height:1.2}
+.detail .meta{font-family:var(--serif);font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--text-dim)}
+.dsec{margin-top:4px}
+.dsec h4{font-family:var(--serif);font-size:8.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);margin-bottom:5px}
+.dsec p{font-size:12.5px;line-height:1.6;color:var(--text);opacity:.94}
+.dsec.will p{color:var(--gold-lt);opacity:1}
+.badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px}
+.badge{
+  font-family:var(--serif);font-size:8px;letter-spacing:.1em;text-transform:uppercase;
+  padding:4px 9px;border-radius:999px;border:1px solid;
+}
+.badge.tone{border-color:rgba(201,162,39,.4);color:var(--gold-lt)}
+.badge.will-advancing{border-color:var(--gold);color:#1E1A14;background:linear-gradient(180deg,var(--gold-lt),var(--gold))}
+.badge.will-hidden{border-color:var(--gold-dk);color:var(--gold-lt);background:rgba(201,162,39,.1)}
+.badge.will-resisted{border-color:var(--accent);color:#E4DCF5;background:rgba(138,106,204,.25)}
+.badge.letter{border-color:var(--gold-dk);color:var(--gold-lt);background:rgba(0,0,0,.3);cursor:pointer;transition:.2s}
+.badge.letter:hover{background:rgba(201,162,39,.2);border-color:var(--gold)}
+.refline{margin-top:auto;padding-top:10px;border-top:1px solid rgba(201,162,39,.22);font-family:var(--serif);font-size:9px;letter-spacing:.1em;color:var(--text-dim)}
+.mnav{display:flex;align-items:center;gap:14px;margin-top:18px;justify-content:center}
+.mbtn{
+  font-family:var(--serif);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+  padding:9px 16px;border:1px solid rgba(201,162,39,.4);border-radius:2px;color:var(--text-dim);transition:.22s var(--ease);
+}
+.mbtn:hover{color:var(--text);border-color:var(--gold);background:rgba(201,162,39,.12)}
+.mbtn.pri{color:var(--gold-lt);border-color:var(--gold)}
+.modal .stack{display:grid;justify-items:center}
+.hintline{margin-top:9px;font-size:11px;font-style:italic;color:var(--text-dim);opacity:.75;text-align:center}
+
+/* --- TIMELINE --- */
+.tlHud{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin:0 0 12px}
+.tlYear{font-family:var(--serif);font-size:clamp(20px,3vw,30px);letter-spacing:.16em;color:var(--gold-lt);
+  min-width:5.2em;text-shadow:0 0 22px rgba(201,162,39,.4)}
+.tlHint{flex:1;font-size:11.5px;font-style:italic;color:var(--text-dim);opacity:.8}
+.tlStage{
+  position:relative;height:clamp(430px,62vh,620px);overflow:hidden;
+  border:1px solid rgba(201,162,39,.28);border-radius:4px;
+  background:radial-gradient(120% 100% at 50% 50%,#1c1913 0%,#0e0d0b 78%);
+  box-shadow:0 0 46px rgba(0,0,0,.65) inset;
+  cursor:grab;touch-action:none;user-select:none;
+}
+.tlStage:active{cursor:grabbing}
+.tlStage::before,.tlStage::after{content:"";position:absolute;top:0;bottom:0;width:90px;z-index:6;pointer-events:none}
+.tlStage::before{left:0;background:linear-gradient(90deg,#0e0d0b,transparent)}
+.tlStage::after{right:0;background:linear-gradient(270deg,#0e0d0b,transparent)}
+.tlSvg{position:absolute;inset:0;width:100%;height:100%}
+.tlItems{position:absolute;inset:0}
+/* the lens band marking the magnified centre */
+.tlLens{position:absolute;left:50%;top:0;bottom:0;width:132px;transform:translateX(-50%);pointer-events:none;z-index:1;
+  background:linear-gradient(90deg,transparent,rgba(201,162,39,.07) 42%,rgba(201,162,39,.07) 58%,transparent);
+  border-left:1px solid rgba(201,162,39,.10);border-right:1px solid rgba(201,162,39,.10)}
+
+.tick{stroke:#C9A227;stroke-width:1;opacity:.22}
+.tick.maj{stroke-width:1.4;opacity:.6}
+.tickLbl{font-family:var(--serif);font-size:10px;fill:#8A7A4A;text-anchor:middle;letter-spacing:.08em}
+.spine{stroke:rgba(201,162,39,.5);stroke-width:1.2}
+.stem{stroke:rgba(201,162,39,.42);stroke-width:1;fill:none}
+.stem.hot{stroke:var(--gold-lt);stroke-width:1.5}
+.durbar{stroke-linecap:round;stroke-width:4;opacity:.5}
+.durbar.hot{opacity:.95;stroke-width:5.5}
+.dur-advancing{stroke:#C9A227}
+.dur-hidden{stroke:#6E5713}
+.dur-resisted{stroke:#8A6ACC}
+.nowLine{stroke:var(--gold-lt);stroke-width:1;opacity:.35;stroke-dasharray:3 5}
+
+/* timeline tile — a compact card */
+.tlItems{--tlW:112px;--tlH:152px}
+.tlItem{position:absolute;left:0;top:0;width:var(--tlW);margin-left:calc(var(--tlW) / -2);cursor:pointer;will-change:transform}
+.tlItem.up{margin-top:calc(var(--tlH) * -1);transform-origin:50% 100%}
+.tlItem.dn{transform-origin:50% 0%}
+.tlTile{
+  position:relative;border-radius:5px;padding:4px;height:var(--tlH);display:flex;flex-direction:column;
+  background:linear-gradient(150deg,var(--f-hi),var(--f-mid) 45%,var(--f-lo));
+  box-shadow:0 1px 0 rgba(255,255,255,.2) inset,0 8px 18px -8px rgba(0,0,0,.9);
+  transition:box-shadow .25s var(--ease);
+}
+.tlItem[data-rarity="common"]{--f-hi:#B08A54;--f-mid:#8A6A3C;--f-lo:#5C4526}
+.tlItem[data-rarity="rare"]{--f-hi:#D6DCE2;--f-mid:#A9AEB4;--f-lo:#6E747A}
+.tlItem[data-rarity="gold"]{--f-hi:#F0D98A;--f-mid:#C9A227;--f-lo:#6E5713}
+.tlItem[data-will="resisted"]{--f-hi:#6E6558;--f-mid:#4E4738;--f-lo:#332E26}
+.tlItem:hover .tlTile,.tlItem.hot .tlTile{box-shadow:0 0 26px -2px rgba(201,162,39,.55),0 8px 18px -8px rgba(0,0,0,.9)}
+.tlIn{flex:1;display:flex;flex-direction:column;border-radius:2px;overflow:hidden;
+  background:linear-gradient(180deg,var(--surface),#221d13);box-shadow:0 0 0 1px rgba(0,0,0,.55)}
+.tart{position:relative;aspect-ratio:16/11;overflow:hidden;box-shadow:0 0 0 1px rgba(0,0,0,.7) inset}
+.tart svg{display:block;width:100%;height:100%;transition:filter .5s var(--ease)}
+.tname{flex:1;padding:4px 5px 2px;font-family:var(--serif);font-size:7.5px;line-height:1.22;color:var(--text);
+  overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical}
+.tyear{padding:1px 5px 3px;font-family:var(--serif);font-size:7px;letter-spacing:.1em;color:var(--gold-lt);opacity:.85}
+.tlItem[data-will="resisted"] .tyear{color:#BCAFD6}
+/* foil, mirrored from the card rules */
+.tlItem[data-will="advancing"] .foil{opacity:.95;animation:sweep 4.6s linear infinite}
+.tlItem[data-rarity="gold"][data-will="advancing"] .foil{opacity:1;animation-duration:3.4s}
+.tlItem[data-will="hidden"] .foil{opacity:.5;animation:sweepSlow 9s ease-in-out infinite}
+.tlItem[data-will="resisted"] .foil{opacity:.75;mix-blend-mode:screen;
+  background:linear-gradient(295deg,transparent 34%,rgba(138,106,204,.42) 48%,rgba(75,56,120,.30) 56%,transparent 68%);
+  background-size:230% 230%;animation:sweepBack 7s linear infinite}
+body.godhand .tart svg{filter:grayscale(1) brightness(.32) contrast(.85)}
+body.godhand .tlItem[data-will="advancing"] .foil{opacity:1;filter:saturate(1.5) brightness(1.5)}
+body.godhand .tname,body.godhand .tyear{opacity:.35}
+
+/* --- MAP --- */
+.mapshell{position:relative;border:1px solid rgba(201,162,39,.28);border-radius:4px;overflow:hidden;
+  background:linear-gradient(180deg,#141210,#0b0a08);box-shadow:0 0 40px rgba(0,0,0,.6) inset}
+.mapshell svg{display:block;width:100%;height:auto}
+.jbar{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 16px;align-items:center}
+.jbar .tog{padding:5px 12px;font-size:10px}
+
+/* landmasses — real Natural Earth coastlines */
+.cty{fill:#241f16;transition:fill .4s var(--ease)}
+.coast{fill:none;stroke:rgba(201,162,39,.55);stroke-width:.9;stroke-linejoin:round;
+  transition:stroke .4s var(--ease),stroke-width .4s var(--ease)}
+.borders{fill:none;stroke:rgba(232,206,114,.85);stroke-width:.7;stroke-linejoin:round;
+  opacity:0;transition:opacity .4s var(--ease)}
+.grat line{stroke:#C9A227;stroke-width:.4;opacity:.10}
+.gratLbl{font-family:var(--serif);font-size:8px;fill:#7A6318;opacity:.5;letter-spacing:.06em}
+.grat{transition:opacity .4s var(--ease)}
+.sea{}
+
+/* modern era */
+.mapshell.modern .cty{fill:#22231c}
+.mapshell.modern .cty:nth-of-type(3n+1){fill:#26241a}
+.mapshell.modern .cty:nth-of-type(4n+2){fill:#1f2219}
+.mapshell.modern .cty:nth-of-type(5n+3){fill:#282318}
+.mapshell.modern .coast{stroke:rgba(232,206,114,.42);stroke-width:.7}
+.mapshell.modern .borders{opacity:.75}
+.mapshell.modern .grat{opacity:1.6}
+
+/* country labels — modern only */
+.ctyLbl{font-family:var(--serif);font-size:12px;letter-spacing:.22em;text-transform:uppercase;
+  fill:#8A7A4A;opacity:0;pointer-events:none;text-anchor:middle;transition:opacity .4s var(--ease)}
+.ctyLbl.sm{font-size:8.5px;letter-spacing:.12em}
+.mapshell.modern .ctyLbl{opacity:.72}
+
+/* sea label crossfade */
+.seaLbl{font-family:var(--serif);font-size:13px;letter-spacing:.3em;fill:#6E5A2A;text-anchor:middle;
+  pointer-events:none;transition:opacity .4s var(--ease)}
+.seaLbl.mod{opacity:0;font-size:11px;letter-spacing:.16em}
+.mapshell.modern .seaLbl.anc{opacity:0}
+.mapshell.modern .seaLbl.mod{opacity:1}
+
+/* the three-second crossing */
+.mapshell.shifting .cty{transition:fill 3s var(--ease)}
+.mapshell.shifting .coast{transition:stroke 3s var(--ease),stroke-width 3s var(--ease)}
+.mapshell.shifting .borders{transition:opacity 2.1s var(--ease)}
+.mapshell.shifting .grat{transition:opacity 3s var(--ease)}
+.mapshell.shifting .cityLbl{transition:opacity 1.2s var(--ease) .85s}
+.mapshell.shifting .seaLbl{transition:opacity 1.2s var(--ease) .85s}
+.mapshell.shifting .ctyLbl{transition:opacity 1.35s var(--ease) 1.6s}
+
+/* routes */
+.route{fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:2.4;
+  stroke-dasharray:7 7;opacity:0;transition:opacity .4s}
+.route.on{opacity:1;animation:march 2.6s linear infinite}
+@keyframes march{to{stroke-dashoffset:-28}}
+
+/* city nodes */
+.cityNode{cursor:pointer}
+.cityNode circle.hit{fill:transparent}
+.cityNode .dot{fill:#5C4A18;transition:.25s}
+.cityNode .halo{fill:none;stroke:var(--gold);stroke-width:1;opacity:0}
+.cityNode.act .dot{fill:var(--gold-lt);filter:drop-shadow(0 0 5px var(--gold))}
+.cityNode.act .halo{opacity:.55;animation:pulse 2.4s ease-out infinite}
+@keyframes pulse{0%{r:5;opacity:.6}100%{r:15;opacity:0}}
+.cityNode:hover .dot{fill:#fff}
+.cityLbl{font-family:var(--serif);font-size:10px;letter-spacing:.06em;fill:var(--gold-lt);
+  paint-order:stroke;stroke:rgba(10,9,7,.85);stroke-width:2.4;stroke-linejoin:round;
+  pointer-events:none;opacity:0;transition:opacity .25s var(--ease)}
+.cityLbl.mod{fill:#D9E0C8}
+.cityNode.act .cityLbl.anc,.cityNode:hover .cityLbl.anc{opacity:.95}
+.mapshell.modern .cityNode.act .cityLbl.anc,.mapshell.modern .cityNode:hover .cityLbl.anc{opacity:0}
+.mapshell.modern .cityNode.act .cityLbl.mod,.mapshell.modern .cityNode:hover .cityLbl.mod{opacity:.95}
+.mapNote{margin-top:14px;font-size:12px;font-style:italic;color:var(--text-dim);text-align:center}
+
+/* --- QUIZ --- */
+.quizWrap{max-width:760px;margin:0 auto;display:grid;justify-items:center;gap:20px}
+.qcard{width:min(300px,74vw)}
+.qprompt{font-family:var(--serif);font-size:clamp(15px,2.5vw,21px);letter-spacing:.05em;text-align:center;color:var(--text);line-height:1.45}
+.qsub{font-size:13px;font-style:italic;color:var(--text-dim);text-align:center;max-width:48ch}
+.qopts{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+.qopt{
+  font-family:var(--serif);font-size:11px;letter-spacing:.13em;text-transform:uppercase;
+  padding:13px 22px;border:1px solid rgba(201,162,39,.4);border-radius:3px;color:var(--text);transition:.22s var(--ease);
+  background:linear-gradient(180deg,rgba(201,162,39,.08),transparent);
+}
+.qopt:hover{border-color:var(--gold);background:rgba(201,162,39,.16);transform:translateY(-2px)}
+.qopt.right{border-color:var(--gold-lt);background:linear-gradient(180deg,var(--gold-lt),var(--gold));color:#1E1A14}
+.qopt.wrong{border-color:var(--accent);background:rgba(138,106,204,.28)}
+.qopt:disabled{cursor:default;transform:none}
+.qfeed{
+  max-width:56ch;text-align:center;font-size:14px;line-height:1.65;color:var(--gold-lt);
+  padding:16px 18px;border:1px solid rgba(201,162,39,.28);border-radius:3px;background:rgba(201,162,39,.06);
+  animation:fadeUp .4s var(--ease);
+}
+.qprog{font-family:var(--serif);font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--gold-dk)}
+
+/* --- FINALE --- */
+.fan{position:relative;height:min(50vh,380px);display:grid;place-items:center;margin:10px 0 26px}
+.fan .card{position:absolute;width:118px;transform-origin:50% 130%;animation:fanIn .9s var(--ease) backwards}
+@keyframes fanIn{from{opacity:0;transform:rotate(0) translateY(60px)}}
+.finaleTxt{max-width:52ch;margin:0 auto;text-align:center;font-size:16px;line-height:1.8;font-style:italic;color:var(--gold-lt)}
+.finaleTxt cite{display:block;margin-top:12px;font-style:normal;font-family:var(--serif);font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--text-dim)}
+
+/* --- misc --- */
+.lede{max-width:62ch;margin:0 0 22px;font-size:14.5px;line-height:1.75;color:var(--text-dim)}
+.lede b{color:var(--gold-lt);font-weight:400}
+.vhead{display:grid;gap:8px;margin-bottom:18px}
+.vhead h2{font-family:var(--serif);font-size:clamp(18px,3vw,26px);letter-spacing:.16em;text-transform:uppercase;color:var(--text)}
+.legend{display:flex;gap:18px;flex-wrap:wrap;margin:0 0 18px;font-size:11.5px;color:var(--text-dim)}
+.legend span{display:flex;align-items:center;gap:7px}
+.swatch{width:22px;height:11px;border-radius:2px;box-shadow:0 0 0 1px rgba(0,0,0,.6)}
+.sw-adv{background:linear-gradient(90deg,#E8CE72,#C9A227)}
+.sw-hid{background:linear-gradient(90deg,#7A6318,#4a3c10)}
+.sw-res{background:linear-gradient(90deg,#8A6ACC,#4B3878)}
+.toast{
+  position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);z-index:120;
+  padding:11px 20px;border:1px solid var(--gold);border-radius:2px;background:rgba(30,26,20,.96);
+  font-family:var(--serif);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-lt);
+  opacity:0;transition:.35s var(--ease);pointer-events:none;
+}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+
+@media (max-width:640px){
+  .grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px}
+  .topbar{gap:10px;padding:10px 14px}
+  .wrap{padding:18px 14px 70px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001ms !important;animation-iteration-count:1 !important;transition-duration:.05s !important}
+  .foil{opacity:.55 !important;background-position:40% 40% !important}
+  .card[data-will="advancing"] .foil{opacity:.85 !important}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">The Life Of Paul<small>Saul of Tarsus · A Collection</small></div>
+  <nav class="nav" id="nav">
+    <button data-go="title" aria-current="true">Title</button>
+    <button data-go="gallery">Collection</button>
+    <button data-go="timeline">Timeline</button>
+    <button data-go="map">Journeys</button>
+    <button data-go="quiz">The Trial</button>
+  </nav>
+  <div class="spacer"></div>
+  <div class="count" id="count">Revealed <b>0</b> / 26</div>
+  <div class="toggles">
+    <button class="tog" id="godBtn" aria-pressed="false" title="Grey out circumstance and show only the foil — God's will">
+      <span class="dot"></span>Show God's Hand
+    </button>
+    <button class="tog" id="sndBtn" aria-pressed="false" title="Toggle sound">
+      <span class="dot"></span>Sound
+    </button>
+  </div>
+</header>
+
+<main>
+  <section class="view on" id="v-title"><div class="wrap"><div class="hero">
+    <div class="heroCard" id="heroCard"></div>
+    <h1>The Life of Paul<em>Tarsus to Rome</em></h1>
+    <p>Twenty-six cards. Some show calm, some show storm — but the gold running through them tells a different story than the picture does.</p>
+    <button class="seal" id="beginBtn">Begin</button>
+  </div></div></section>
+
+  <section class="view" id="v-gallery"><div class="wrap">
+    <div class="vhead">
+      <h2>The Collection</h2>
+      <p class="lede">Every card carries <b>two</b> signals. The <b>picture</b> shows what the moment felt like — calm, turbulent, or dark. The <b>foil sheen and frame</b> show whether God's will was advancing. They do not always agree, and that is the point. Press <b>Show God's Hand</b> to see only the gold.</p>
+      <div class="legend">
+        <span><i class="swatch sw-adv"></i>Advancing — bright rainbow sweep, gold frame</span>
+        <span><i class="swatch sw-hid"></i>Hidden — dim sweep that slowly builds</span>
+        <span><i class="swatch sw-res"></i>Resisted — violet haze, tarnished frame</span>
+      </div>
+    </div>
+    <div class="filters" id="filters">
+      <span class="flabel">Circumstance</span>
+      <button class="chip" data-f="tone" data-v="all" aria-pressed="true">All</button>
+      <button class="chip" data-f="tone" data-v="calm" aria-pressed="false">Calm</button>
+      <button class="chip" data-f="tone" data-v="turbulent" aria-pressed="false">Turbulent</button>
+      <button class="chip" data-f="tone" data-v="dark" aria-pressed="false">Dark</button>
+      <span class="sep"></span>
+      <span class="flabel">God's Will</span>
+      <button class="chip" data-f="will" data-v="all" aria-pressed="true">All</button>
+      <button class="chip" data-f="will" data-v="advancing" aria-pressed="false">Advancing</button>
+      <button class="chip" data-f="will" data-v="hidden" aria-pressed="false">Hidden</button>
+      <button class="chip vio" data-f="will" data-v="resisted" aria-pressed="false">Resisted</button>
+    </div>
+    <div id="acts"></div>
+  </div></section>
+
+  <section class="view" id="v-timeline"><div class="wrap">
+    <div class="vhead"><h2>The Timeline</h2>
+      <p class="lede">Sixty-three years, one tick to the year. Each card hangs from the year its event <b>began</b>,
+      and the bar beneath the axis shows how long it ran — so you can see what overlapped what.
+      Whatever sits at the centre is <b>magnified</b>; the years at either edge stay small.</p>
+    </div>
+    <div class="tlHud">
+      <div class="tlYear" id="tlYear">AD 5</div>
+      <div class="tlHint">Scroll to travel the years · drag to pan · ← → to step</div>
+      <button class="tog" id="tlFit"><span class="dot"></span>Whole Life</button>
+    </div>
+    <div class="tlStage" id="tlStage" tabindex="0" role="application"
+         aria-label="Timeline of Paul's life, AD 5 to 68. Use left and right arrow keys to travel.">
+      <svg class="tlSvg" id="tlSvg" aria-hidden="true"></svg>
+      <div class="tlItems" id="tlItems"></div>
+      <div class="tlLens" aria-hidden="true"></div>
+    </div>
+    <p class="mapNote">Click any card to open it in full.</p>
+  </div></section>
+
+  <section class="view" id="v-map"><div class="wrap">
+    <div class="vhead"><h2>The Journeys</h2>
+      <p class="lede">Paul covered something near <b>10,000 miles</b> — most of it on foot or in the hold of a grain ship. Choose a journey to trace the road.</p>
+    </div>
+    <div class="jbar" id="jbar"></div>
+    <div class="mapshell" id="mapshell"></div>
+    <p class="mapNote">Click any lit city to open its card. Coastlines and boundaries are Natural Earth 1:110m data, drawn on a Mercator projection.</p>
+  </div></section>
+
+  <section class="view" id="v-quiz"><div class="wrap">
+    <div class="vhead"><h2>The Trial of Discernment</h2></div>
+    <div class="quizWrap" id="quizWrap"></div>
+  </div></section>
+
+  <section class="view" id="v-end"><div class="wrap">
+    <div class="vhead" style="justify-items:center;text-align:center"><h2>The Race Finished</h2></div>
+    <div class="fan" id="fan"></div>
+    <p class="finaleTxt" id="finaleTxt">
+      “I have fought the good fight, I have finished the race, I have kept the faith.”
+      <cite>2 Timothy 4:7</cite>
+    </p>
+    <div class="mnav">
+      <button class="mbtn" data-go="gallery">Back to the Collection</button>
+      <button class="mbtn pri" id="replayGod">Replay God's Hand</button>
+    </div>
+  </div></section>
+</main>
+
+<div class="modal" id="modal" role="dialog" aria-modal="true" aria-label="Card detail">
+  <div class="stack">
+    <div class="flipper" id="flipper">
+      <div class="face front" id="mFront"></div>
+      <div class="face back" id="mBack"></div>
+    </div>
+    <p class="hintline">Click the card to turn it over</p>
+    <div class="mnav">
+      <button class="mbtn" id="prevBtn">‹ Previous</button>
+      <button class="mbtn pri" id="closeBtn">Close</button>
+      <button class="mbtn" id="nextBtn">Next ›</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script>
+(function(){
+"use strict";
+
+/* ============================================================
+   1. DATA — 26 cards, 8 acts
+   tone: calm | turbulent | dark   (circumstance — the ART)
+   will: advancing | hidden | resisted (God's purpose — the FOIL)
+   ============================================================ */
+const ACTS=[
+ {n:"I",   t:"Before the Light",  s:"c. AD 5 – 34"},
+ {n:"II",  t:"The Road",          s:"c. AD 33 – 45"},
+ {n:"III", t:"Antioch",           s:"c. AD 43 – 47"},
+ {n:"IV",  t:"The First Journey", s:"c. AD 46 – 49"},
+ {n:"V",   t:"The Council",       s:"c. AD 48 – 50"},
+ {n:"VI",  t:"The Second Journey",s:"c. AD 49 – 52"},
+ {n:"VII", t:"The Third Journey", s:"c. AD 52 – 57"},
+ {n:"VIII",t:"Chains and Crown",  s:"c. AD 57 – 67"}
+];
+
+const EVENTS=[
+{id:1,act:0,rarity:"common",tone:"calm",will:"hidden",art:"tarsus",city:"tarsus",tag:"Early Life",
+ title:"Born in Tarsus",date:"c. AD 5–10",type:"Origin — Cilicia",
+ body:"A Jewish boy of the tribe of Benjamin, born in a busy Roman port city — and a Roman citizen from his first breath.",
+ what:"Paul was born in Tarsus of Cilicia, a wealthy university city on a trade road. He was Jewish, of the tribe of Benjamin, and — unusually — held Roman citizenship by birth.",
+ where:"Nothing here looks like a miracle. But the two things that shaped his whole mission were handed to him at birth: Greek city fluency, and a Roman passport he would one day use to reach Caesar himself.",
+ flavour:"“I was born a citizen.”",ref:"Acts 22:28; Philippians 3:5",letters:[]},
+
+{id:2,act:0,rarity:"common",tone:"calm",will:"hidden",art:"gamaliel",city:"jerusalem",tag:"Early Life",
+ title:"At the Feet of Gamaliel",date:"c. AD 20s",type:"Training — Jerusalem",
+ body:"He studied under the most respected teacher in Jerusalem and became a Pharisee — precise, zealous, and completely certain.",
+ what:"Sent to Jerusalem, Saul trained under Gamaliel, the leading rabbi of the age. He became a Pharisee: rigorous in the law and, by his own account, more zealous than anyone his age.",
+ where:"God was building the scholar before He met the man. Every text Paul would later use to prove Jesus was the Messiah, he first learned in this room — from a teacher who did not believe it.",
+ flavour:"“Educated strictly according to the law of our fathers.”",ref:"Acts 22:3; Galatians 1:14",letters:[]},
+
+{id:3,act:0,rarity:"rare",tone:"turbulent",will:"resisted",art:"stephen",city:"jerusalem",tag:"Persecutor",
+ title:"The Stoning of Stephen",date:"c. AD 31–34",type:"Opposition — Jerusalem",
+ body:"Saul stands guarding the coats of the men who kill Stephen. Then he goes house to house, dragging believers to prison.",
+ what:"Saul approved of Stephen's execution and held the killers' cloaks. He then led a violent campaign against the church, entering homes and imprisoning men and women alike.",
+ where:"This is the card to look at twice. The sky is not dark and the frame is not gold — it is tarnished. Saul is comfortable, respected, and certain he is serving God. He is fighting Him. Comfort is not the same as being right.",
+ flavour:"“And Saul approved of his execution.”",ref:"Acts 7:58 – 8:3; Galatians 1:13",letters:[]},
+
+{id:4,act:1,rarity:"gold",tone:"turbulent",will:"advancing",art:"damascus",city:"damascus",tag:"Conversion",
+ title:"The Damascus Road",date:"c. AD 33/34",type:"Conversion — The Road",
+ body:"A light brighter than noon knocks him to the ground. He gets up blind, and is led into the city he came to raid.",
+ what:"Travelling to Damascus with arrest warrants, Saul was thrown down by a blinding light and heard Jesus speak his name twice. He rose sightless and was led by the hand into the city.",
+ where:"The most violent moment in Paul's life so far, and the most gold. God did not persuade him — He stopped him. The persecutor did not find Jesus; Jesus came out to the road and got him.",
+ flavour:"“Saul, Saul, why do you persecute me?”",ref:"Acts 9:1–9; Galatians 1:15–16",letters:[]},
+
+{id:5,act:1,rarity:"rare",tone:"calm",will:"advancing",art:"ananias",city:"damascus",tag:"Conversion",
+ title:"Ananias and the Scales",date:"c. AD 33/34",type:"Healing — Damascus",
+ body:"A frightened disciple is sent to lay hands on the man hunting him. Something like scales falls from Saul's eyes.",
+ what:"God sent Ananias to Saul. Ananias objected — he knew exactly who this man was — and went anyway. Saul's sight returned and he was baptised.",
+ where:"God's will advanced through an ordinary believer's obedient fear. Ananias was not brave; he was willing. That was enough.",
+ flavour:"“Brother Saul…”",ref:"Acts 9:10–19",letters:[]},
+
+{id:6,act:1,rarity:"common",tone:"dark",will:"advancing",art:"basket",city:"damascus",tag:"Escape",
+ title:"Escape in a Basket",date:"c. AD 36",type:"Escape — Damascus",
+ body:"They watch the gates day and night to kill him. At night his friends lower him down the outside of the wall in a basket.",
+ what:"After preaching in Damascus, a plot formed against Paul's life and the city gates were watched. Disciples lowered him through an opening in the wall in a large basket.",
+ where:"The great apostle's first exit is undignified — hiding in a laundry basket in the dark. God's will was advancing anyway. It rarely looks impressive from the outside.",
+ flavour:"“I was let down in a basket through a window in the wall.”",ref:"Acts 9:23–25; 2 Corinthians 11:32–33",letters:[]},
+
+{id:7,act:1,rarity:"rare",tone:"calm",will:"hidden",art:"silent",city:"tarsus",tag:"Silent Years",
+ title:"The Silent Years",date:"c. AD 37–45",type:"Waiting — Syria & Cilicia",
+ body:"Arabia, then Damascus, then home to Tarsus. Nearly a decade the Bible barely records at all.",
+ what:"After a first short visit to Jerusalem where he met Peter and James, Paul fled a plot and went to Tarsus. Roughly eight years pass with almost nothing written down.",
+ where:"Watch this card's foil: it barely glows, then flares near the end. Long stretches of a faithful life look like nothing is happening. God was not idle during the silence — He was making a man who could be trusted with the work.",
+ flavour:"“Then I went into the regions of Syria and Cilicia.”",ref:"Galatians 1:17–24; Acts 9:26–30",letters:[]},
+
+{id:8,act:2,rarity:"rare",tone:"calm",will:"advancing",art:"barnabas",city:"antiochsyria",tag:"Antioch",
+ title:"Barnabas Comes for Saul",date:"c. AD 43–45",type:"Calling — Antioch",
+ body:"One man remembers him, travels to Tarsus, finds him, and brings him back into the work.",
+ what:"Barnabas — whose name means 'son of encouragement' — had already vouched for Saul in Jerusalem when everyone else was afraid of him. Now he went to Tarsus, found him, and brought him to Antioch to teach.",
+ where:"The silent years ended because someone went looking. God's will often advances through a friend who refuses to give up on you.",
+ flavour:"“Barnabas went to Tarsus to look for Saul.”",ref:"Acts 11:25–26",letters:[]},
+
+{id:9,act:2,rarity:"common",tone:"calm",will:"advancing",art:"christians",city:"antiochsyria",tag:"Antioch",
+ title:"First Called Christians",date:"c. AD 45–46",type:"Growth — Antioch",
+ body:"A whole year of teaching. Here, for the first time anywhere, the believers get a name.",
+ what:"Paul and Barnabas taught great numbers at Antioch for about a year. It was in this Gentile city that disciples were first called Christians. From here they also carried famine relief to Jerusalem.",
+ where:"The centre of gravity quietly moved out of Jerusalem and into a mixed Gentile city. Nobody voted on it. God was widening the door.",
+ flavour:"“The disciples were first called Christians in Antioch.”",ref:"Acts 11:26–30",letters:[]},
+
+{id:10,act:3,rarity:"rare",tone:"turbulent",will:"advancing",art:"elymas",city:"paphos",tag:"Journey I",
+ title:"Cyprus and the Sorcerer",date:"c. AD 46–47",type:"Confrontation — Paphos",
+ body:"A court magician tries to keep the governor from believing. Paul looks straight at him, and the man goes blind.",
+ what:"Sent out from Antioch with Barnabas and John Mark, they crossed Cyprus to Paphos. There Elymas the sorcerer opposed them before the proconsul Sergius Paulus; Paul struck him temporarily blind, and the proconsul believed.",
+ where:"Paul, once blinded himself, is the one who now pronounces blindness — and it is temporary, as his was. Even the judgment is shaped like mercy.",
+ flavour:"“You will be blind, and unable to see the sun for a time.”",ref:"Acts 13:4–12",letters:[]},
+
+{id:11,act:3,rarity:"common",tone:"calm",will:"hidden",art:"johnmark",city:"perga",tag:"Journey I",
+ title:"John Mark Turns Back",date:"c. AD 47",type:"Departure — Perga",
+ body:"At Perga the youngest of the three goes home. Paul does not forget it.",
+ what:"At Perga in Pamphylia, John Mark left the mission and returned to Jerusalem. The reason is never given. It would later split Paul and Barnabas.",
+ where:"Nothing glorious here, and no verdict offered. Years later Paul would write, 'Bring Mark, for he is useful to me.' God was not finished with the one who quit.",
+ flavour:"“John left them and returned to Jerusalem.”",ref:"Acts 13:13; 2 Timothy 4:11",letters:[]},
+
+{id:12,act:3,rarity:"rare",tone:"turbulent",will:"advancing",art:"expelled",city:"pisidian",tag:"Journey I",
+ title:"Expelled from Pisidian Antioch",date:"c. AD 47",type:"Rejection — Pisidia",
+ body:"The whole city gathers to hear him. A week later he is driven out of the district.",
+ what:"Paul preached in the synagogue and nearly the whole city came the next Sabbath. Opposition rose, and he turned deliberately to the Gentiles. He and Barnabas were expelled and shook the dust off their feet.",
+ where:"Being thrown out was the hinge, not the setback. The rejection in the synagogue is precisely what opened the mission to the nations.",
+ flavour:"“We are turning to the Gentiles.”",ref:"Acts 13:14–52",letters:[]},
+
+{id:13,act:3,rarity:"gold",tone:"dark",will:"advancing",art:"lystra",city:"lystra",tag:"Journey I",
+ title:"Stoned at Lystra",date:"c. AD 48",type:"Suffering — Lystra",
+ body:"In the morning they call him a god. By evening they stone him and drag him out of town for dead. He gets up and walks back in.",
+ what:"After Paul healed a man lame from birth, the crowd tried to sacrifice to him as a god. Agitators arrived; the same crowd stoned him and dragged him outside the city, believing him dead. He rose, re-entered the city, and left for Derbe the next day.",
+ where:"Look at this card with God's Hand on. The picture is as dark as the set gets — and the gold is as bright as it gets. Suffering is not evidence that God has lost. Watching from Lystra that day was a boy named Timothy.",
+ flavour:"“They dragged him out of the city, supposing him to be dead.”",ref:"Acts 14:8–20; 2 Corinthians 11:25",letters:[]},
+
+{id:14,act:4,rarity:"gold",tone:"calm",will:"advancing",art:"council",city:"jerusalem",tag:"The Council",
+ title:"The Jerusalem Council",date:"c. AD 48–50",type:"Decision — Jerusalem",
+ body:"Must a Gentile become a Jew before he can belong to Jesus? The apostles meet, argue, listen, and answer: no.",
+ what:"A dispute in Antioch over circumcision sent Paul and Barnabas to Jerusalem. After debate, Peter, Paul, Barnabas and James agreed that Gentile believers need not keep the law of Moses to be saved.",
+ where:"No miracle, no storm — a meeting. Yet arguably the single most consequential day for everyone reading this. Grace was defended in a room full of disagreement, and God's will advanced through honest argument.",
+ flavour:"“We believe we are saved through the grace of the Lord Jesus.”",ref:"Acts 15:1–35; Galatians 2:1–10",letters:["Galatians"]},
+
+{id:15,act:4,rarity:"rare",tone:"turbulent",will:"advancing",art:"peter",city:"antiochsyria",tag:"The Council",
+ title:"Paul Withstands Peter",date:"c. AD 49",type:"Rebuke — Antioch",
+ body:"Peter stops eating with Gentiles when important visitors arrive. Paul corrects him in front of everyone.",
+ what:"In Antioch, Peter withdrew from table fellowship with Gentile believers out of fear of the circumcision party. Paul opposed him to his face for not walking in line with the truth of the gospel.",
+ where:"A public argument between two apostles, and God's will still advancing. Truth mattered more than the atmosphere in the room — and Peter later called Paul 'our beloved brother.'",
+ flavour:"“I opposed him to his face, because he stood condemned.”",ref:"Galatians 2:11–14; 2 Peter 3:15",letters:[]},
+
+{id:16,act:5,rarity:"rare",tone:"calm",will:"advancing",art:"vision",city:"troas",tag:"Journey II",
+ title:"The Macedonian Vision",date:"c. AD 49/50",type:"Guidance — Troas",
+ body:"Twice the Spirit blocks the road he wanted. Then at Troas a man from across the sea says: come over and help us.",
+ what:"Separated from Barnabas over John Mark, Paul travelled with Silas and picked up Timothy at Lystra. Forbidden to go into Asia or Bithynia, at Troas he saw a Macedonian man pleading with him to cross into Europe.",
+ where:"Two closed doors were the guidance, before the open one arrived. The gospel entered Europe because Paul's preferred plans were refused.",
+ flavour:"“Come over to Macedonia and help us.”",ref:"Acts 15:36 – 16:10",letters:[]},
+
+{id:17,act:5,rarity:"common",tone:"calm",will:"advancing",art:"lydia",city:"philippi",tag:"Journey II",
+ title:"Lydia by the River",date:"c. AD 50",type:"Conversion — Philippi",
+ body:"No synagogue in the city. Just some women praying at the riverside — and a cloth merchant whose heart the Lord opens.",
+ what:"In Philippi Paul found no synagogue, so he went to a riverside prayer place. Lydia, a dealer in purple cloth from Thyatira, listened; the Lord opened her heart, and she and her household were baptised. Her home became the first church in Europe.",
+ where:"Europe's first congregation began with a handful of women and a businesswoman's open door. God's will advanced quietly, without a crowd.",
+ flavour:"“The Lord opened her heart to pay attention.”",ref:"Acts 16:11–15",letters:[]},
+
+{id:18,act:5,rarity:"gold",tone:"dark",will:"advancing",art:"jail",city:"philippi",tag:"Journey II",
+ title:"Midnight in the Philippi Jail",date:"c. AD 50",type:"Imprisonment — Philippi",
+ body:"Beaten with rods, feet in the stocks, backs bleeding — and at midnight they are singing. Then the earth moves.",
+ what:"After freeing a slave girl from a spirit of divination, Paul and Silas were stripped, beaten and jailed. At midnight they prayed and sang; an earthquake opened every door. Paul stopped the jailer from suicide, and the man's whole household believed before dawn.",
+ where:"The darkest art in the set with the brightest foil. They could have escaped — that was the obvious move. Staying is what saved the jailer. God's will advanced through a wound that was not avenged.",
+ flavour:"“About midnight Paul and Silas were praying and singing hymns.”",ref:"Acts 16:16–40",letters:[]},
+
+{id:19,act:5,rarity:"gold",tone:"turbulent",will:"advancing",art:"marshill",city:"athens",tag:"Journey II",
+ title:"Mars Hill, Athens",date:"c. AD 50/51",type:"Preaching — Areopagus",
+ body:"Surrounded by philosophers and a forest of idols, he starts with an altar they built to a god they could not name.",
+ what:"Provoked by the idols of Athens, Paul reasoned in the marketplace and was brought to the Areopagus. He preached the unknown God, quoted their own poets, and proclaimed the resurrection. Some mocked; some believed.",
+ where:"By worldly measure, a modest result — a handful of converts, a lot of sneering. Gold all the same. God's will is not measured by the size of the response.",
+ flavour:"“What therefore you worship as unknown, this I proclaim to you.”",ref:"Acts 17:16–34",letters:[]},
+
+{id:20,act:5,rarity:"rare",tone:"calm",will:"advancing",art:"corinth",city:"corinth",tag:"Journey II",
+ title:"Eighteen Months in Corinth",date:"c. AD 50–52",type:"Building — Corinth",
+ body:"Tent-making by day with Aquila and Priscilla, preaching by night. He stays a year and a half — and writes his first letters.",
+ what:"In Corinth Paul worked as a tentmaker alongside Aquila and Priscilla and stayed about eighteen months. Hauled before the proconsul Gallio, he was dismissed without charge. From here he wrote 1 and 2 Thessalonians.",
+ where:"Long, unspectacular, ordinary work — and a church that lasted. Gallio's ruling also gave Christianity legal breathing room across the empire.",
+ flavour:"“Do not be afraid, but go on speaking… I have many in this city who are my people.”",ref:"Acts 18:1–18",letters:["1 Thessalonians","2 Thessalonians"]},
+
+{id:21,act:6,rarity:"rare",tone:"calm",will:"advancing",art:"ephesus",city:"ephesus",tag:"Journey III",
+ title:"Three Years at Ephesus",date:"c. AD 53–56",type:"Ministry — Ephesus",
+ body:"Daily teaching in a lecture hall for two years, until all of Asia has heard. Sorcerers burn their scrolls in the street.",
+ what:"Paul taught daily in the hall of Tyrannus for about two years, and stayed roughly three in all. Extraordinary miracles occurred; many who practised magic burned their books publicly. He wrote 1 Corinthians from here.",
+ where:"The longest stay of his ministry, and the most fruitful. Depth took time. God's will advanced by Paul staying put.",
+ flavour:"“All the residents of Asia heard the word of the Lord.”",ref:"Acts 19:1–20",letters:["1 Corinthians"]},
+
+{id:22,act:6,rarity:"rare",tone:"turbulent",will:"advancing",art:"riot",city:"ephesus",tag:"Journey III",
+ title:"The Silversmiths' Riot",date:"c. AD 56",type:"Riot — Ephesus",
+ body:"The idol trade is collapsing, so the silversmiths fill the theatre with a mob chanting for two solid hours.",
+ what:"Demetrius the silversmith, seeing his idol-making trade threatened, roused a mob that filled the great theatre of Ephesus shouting 'Great is Artemis of the Ephesians' for about two hours until the city clerk dispersed them.",
+ where:"The riot is itself the evidence: the gospel had gone deep enough to show up in the city's accounts. Opposition can be a measure of progress.",
+ flavour:"“Great is Artemis of the Ephesians!”",ref:"Acts 19:23–41",letters:["2 Corinthians","Romans"]},
+
+{id:23,act:6,rarity:"rare",tone:"calm",will:"hidden",art:"miletus",city:"miletus",tag:"Journey III",
+ title:"Farewell at Miletus",date:"c. AD 57",type:"Parting — Miletus",
+ body:"He calls the Ephesian elders down to the shore, tells them chains are waiting, and that they will not see his face again. They weep on his neck.",
+ what:"Sailing past Ephesus to reach Jerusalem, Paul summoned the elders to Miletus. He warned of coming hardship and of wolves among them, commended them to God, and knelt with them on the beach.",
+ where:"The foil is dim here on purpose. Paul is walking knowingly toward arrest and does not know why. Obedience without a visible reason is still obedience.",
+ flavour:"“I do not account my life of any value, nor as precious to myself.”",ref:"Acts 20:17–38",letters:[]},
+
+{id:24,act:7,rarity:"rare",tone:"dark",will:"hidden",art:"caesarea",city:"caesarea",tag:"Chains",
+ title:"Arrest and the Long Wait",date:"c. AD 57–59",type:"Imprisonment — Caesarea",
+ body:"A riot in the temple, a plot by forty men, then two years in a cell in Caesarea while a governor waits for a bribe that never comes.",
+ what:"Seized in the temple and rescued by Roman soldiers, Paul was moved to Caesarea. He testified before the Sanhedrin, Felix, Festus and Agrippa II, and finally appealed to Caesar. Felix left him imprisoned about two years, hoping for money.",
+ where:"Two years of a great missionary's life apparently wasted in a cell. The foil is faint but never goes out. This is the road to Rome — it just does not look like one yet.",
+ flavour:"“I appeal to Caesar.”",ref:"Acts 21:27 – 26:32",letters:[]},
+
+{id:25,act:7,rarity:"gold",tone:"dark",will:"advancing",art:"shipwreck",city:"malta",tag:"To Rome",
+ title:"Shipwreck on Malta",date:"c. AD 60",type:"Storm — Malta",
+ body:"Fourteen days in a hurricane, the ship broken apart on a reef — and every one of the 276 aboard reaches shore alive.",
+ what:"Sailing to Rome as a prisoner, Paul's ship was caught in a north-easter for fourteen days and wrecked on Malta. All 276 aboard survived, as an angel had told him. A viper struck his hand and he shook it into the fire unharmed, and he healed many on the island.",
+ where:"The prisoner ends up feeding the crew, encouraging the soldiers and running the rescue. God's will did not merely survive the storm — it used the storm as transport.",
+ flavour:"“Take heart, men, for I have faith in God that it will be exactly as I have been told.”",ref:"Acts 27:1 – 28:10",letters:[]},
+
+{id:26,act:7,rarity:"gold",tone:"dark",will:"advancing",art:"rome",city:"rome",tag:"Rome",
+ title:"Rome — The Final Letter",date:"c. AD 60–67",type:"Martyrdom — Rome",
+ body:"Two years of house arrest and four great letters. Then release, more travel, rearrest — and a cold cell where he writes that the race is finished.",
+ what:"Paul spent about two years under house arrest in Rome, preaching freely and writing Ephesians, Colossians, Philemon and Philippians. Tradition holds he was released, travelled again, wrote 1 Timothy and Titus, then was rearrested under Nero. From his final imprisonment he wrote 2 Timothy, and was beheaded in Rome, about AD 67.",
+ where:"He reached Rome — in chains, at the empire's expense, exactly as he asked. The chains themselves became the pulpit, and the prison letters have outlived the empire that made them.",
+ flavour:"“I have fought the good fight, I have finished the race, I have kept the faith.”",
+ ref:"Acts 28:16–31; 2 Timothy 4:6–8",letters:["Ephesians","Colossians","Philemon","Philippians","1 Timothy","Titus","2 Timothy"]}
+];
+
+const LETTERS={
+ "Galatians":["48–55","Antioch, or later from Ephesus/Macedonia"],
+ "1 Thessalonians":["50–51","Corinth"],
+ "2 Thessalonians":["50–52","Corinth"],
+ "1 Corinthians":["55","Ephesus"],
+ "2 Corinthians":["55–56","Macedonia"],
+ "Romans":["56–57","Corinth"],
+ "Ephesians":["60–62","Rome (prison)"],
+ "Colossians":["60–62","Rome (prison)"],
+ "Philemon":["60–62","Rome (prison)"],
+ "Philippians":["60–62","Rome (prison)"],
+ "1 Timothy":["63–65","Macedonia"],
+ "Titus":["63–65","Macedonia or Nicopolis"],
+ "2 Timothy":["66–67","Rome (final prison)"]
+};
+
+const TONE_LABEL={calm:"Calm",turbulent:"Turbulent",dark:"Dark"};
+const WILL_LABEL={advancing:"God's Will Advancing",hidden:"God's Will Hidden",resisted:"God's Will Resisted"};
+const WILL_ICON={advancing:"✦",hidden:"✧",resisted:"✖"};
+
+/* ============================================================
+   GEODATA — Natural Earth 1:110m, Mercator, fitted to the journeys
+   ============================================================ */
+const GEO={
+ W:1000,H:560,
+ countries:[{"n":"Turkey","d":"M1000,291.7L979.4,291.8L962.2,284.2L926.5,295.5L915.8,287.6L914.1,310.1L905.3,318.9L896.7,327.7L884.8,309.5L897.0,294.3L877.3,297.8L850.1,288.5L827.8,311.7L778.6,316.2L752.3,294.6L717.3,293.2L709.8,309.9L687.4,314.7L656.1,293.3L620.7,294.0L601.4,253.5L577.7,230.7L593.4,198.4L572.9,178.4L608.9,137.9L658.9,136.2L672.5,103.6L734.3,109.3L773.3,81.3L811.2,69.0L864.8,68.0L921.4,98.7L968.1,115.3L1000,109.7L1000,291.7ZM571.1,77.3L604.2,63.6L632.1,69.4L636.0,86.2L664.3,100.1L658.4,110.7L619.8,113.1L606.1,126.3L579.0,149.3L568.8,129.4L569.1,120.7L576.9,115.8L586.9,88.8Z"},{"n":"Italy","d":"M162.8,0L179.0,36.3L215.1,71.7L240.4,71.5L248.4,81.1L239.3,89.7L268.4,105.4L292.2,118.3L320.0,140.6L323.4,148.6L317.3,163.7L299.3,143.9L271.0,136.9L257.5,164.4L280.9,180.0L277.0,201.9L263.5,204.3L246.2,239.8L232.6,243.0L232.7,230.4L239.4,208.2L246.4,199.3L233.8,175.0L223.9,153.7L210.4,148.4L200.8,130.0L179.9,122.3L165.9,104.9L141.9,102.2L116.5,82.6L86.8,54.2L64.8,28.8L58.2,0L162.8,0ZM202.7,233.3L227.4,229.8L215.7,262.1L220.5,274.7L213.7,295.5L188.8,280.3L172.3,275.9L127.1,255.2L131.6,234.0L169.5,237.8ZM0,116.6L6.4,117.4L6.4,117.4L22.6,104.1L42.0,134.5L37.4,190.4L22.7,187.7L9.5,201.7L0,193.1L0,116.6Z"},{"n":"Libya","d":"M37.3,560L31.4,541.3L47.2,532.6L50.0,516.6L46.5,501.0L68.8,486.3L78.9,474.0L94.7,463.0L96.5,433.4L134.6,446.7L148.3,443.4L175.4,449.8L218.4,467.0L233.6,501.0L262.8,508.3L308.4,524.2L343.0,542.8L358.9,533.1L374.4,515.7L366.8,486.6L377.0,468L400.4,450.0L422.8,444.7L466.6,452.6L477.7,469.8L489.8,469.9L500.1,476.5L532.4,481.0L540.3,493.6L528.5,511.8L533.5,528.0L525.2,551.2L528.1,560L37.3,560Z"},{"n":"Greece","d":"M576.7,348.5L572.7,360.2L525.9,363.6L526.3,357.0L486.7,349.3L492.8,332.3L510.5,345.8L535.7,343.5L559.9,346.3L559.1,353.2ZM468.5,98.5L492.5,99.8L518.5,87.9L541.3,103.0L570.8,98.9L571.1,77.3L586.9,88.8L576.9,115.8L569.1,120.7L549.4,119.4L532.5,115.4L493.2,126.5L515.6,150.5L499.2,157.4L481.2,157.4L464.0,135.5L457.9,144.9L465.2,170.2L481.4,189.9L469.2,199.0L487.3,218.2L503.3,230.2L503.7,253.4L473.7,242.5L483.3,263.5L462.7,267.8L475.0,303.5L453.5,304.1L426.9,286.5L414.7,253.9L409.0,226.5L396.4,207.4L379.7,183.5L377.6,171.6L392.6,151.1L394.5,137.2L405.1,131.1L405.7,119.9L427.0,116.0L439.4,106.6L456.9,107.5L462.3,100.0Z"},{"n":"Tunisia","d":"M0,281.0L32.3,265.9L55.1,270.8L54.0,291.4L81.6,276.5L83.9,284.2L67.7,304.1L67.4,322.7L78.7,332.6L74.5,367.0L53.1,386.8L59.3,408.1L76.0,408.8L84.2,427.3L96.5,433.4L94.7,463.0L78.9,474.0L68.8,486.3L46.5,501.0L50.0,516.6L47.2,532.6L31.4,541.3L31.4,541.3L17.6,473.2L0,459.6L0,281.0Z"},{"n":"Egypt","d":"M528.1,560L525.2,551.2L533.5,528.0L528.5,511.8L540.3,493.6L583.4,493.0L614.7,503.0L646.8,514.2L661.9,520.1L686.9,508.1L700.2,497.2L728.8,494.1L752.0,498.9L760.7,517.7L768.3,505.3L794.2,514.3L819.6,516.4L835.6,506.9L853.1,560L776.5,560L776.5,560L775.8,558.5L774.2,560L528.1,560Z"},{"n":"Syria","d":"M1000,414.0L982.4,424.0L918.9,465.1L882.8,449.9L882.8,449.9L882.1,449.6L886.5,443.8L886.1,427.9L894.0,406.6L911.6,391.8L906.4,376.5L891.8,374.4L888.7,344.1L896.7,327.7L905.3,318.9L914.1,310.1L915.8,287.6L926.5,295.5L962.2,284.2L979.4,291.8L1000,291.7L1000,414.0Z"},{"n":"Bulgaria","d":"M645.0,0L633.5,12.7L621.7,44.4L632.1,69.4L604.2,63.6L571.1,77.3L570.8,98.9L541.3,103.0L518.5,87.9L492.5,99.8L468.5,98.5L466.1,69.8L449.9,55.8L455.3,49.5L451.8,44.3L457.2,30.2L469.5,16.3L456.1,0L645.0,0Z"},{"n":"Jordan","d":"M860.0,560L873.1,511.4L872.3,496.6L877.1,485.5L877.1,462.0L877.1,462.0L882.8,449.9L918.9,465.1L982.4,424.0L995.5,471.0L989.3,476.8L924.4,495.9L956.7,533.7L946.0,540.2L940.6,552.7L915.8,557.9L914.6,560L860.0,560Z"},{"n":"Saudi Arabia","d":"M914.6,560L915.8,557.9L940.6,552.7L946.0,540.2L956.7,533.7L924.4,495.9L989.3,476.8L995.5,471.0L1000,472.2L1000,560Z"},{"n":"Albania","d":"M405.7,119.9L405.1,131.1L394.5,137.2L392.6,151.1L377.6,171.6L372.0,168.7L371.4,159.4L353.4,145.1L350.6,124.8L353.3,95.4L357.7,81.9L352.2,75.1L350.1,61.2L364.1,39.5L366.2,47.8L375.0,43.9L381.9,55.8L389.6,60.2L391.8,76.0L387.7,90.8L392.3,109.4Z"},{"n":"Serbia","d":"M456.1,0L469.5,16.3L457.2,30.2L451.8,44.3L455.3,49.5L449.9,55.8L434.9,56.4L423.8,59.0L422.8,55.8L426.6,50.5L430.3,39.8L425.7,40.1L419.4,31.8L414.0,29.7L409.8,22.7L403.7,20.0L399.1,13.6L393.2,16.1L388.8,30.8L381.1,34.1L383.7,30.2L371.3,21.0L360.6,16.3L356.0,10.1L347.3,2.4L354.9,0.4L355.0,0L456.1,0Z"},{"n":"Israel","d":"M853.1,560L835.6,506.9L844.9,494.4L842.7,492.2L851.4,474.4L857.9,445.3L862.6,435.6L863.5,435.2L874.4,435.3L877.3,428.4L886.1,427.9L886.5,443.8L882.1,449.6L882.8,449.9L882.8,449.9L877.1,462.0L865.4,456.7L858.6,482.3L866.7,486.5L858.4,491.7L857.0,501.8L872.3,496.6L873.1,511.4L860.0,560L853.1,560Z"},{"n":"Macedonia","d":"M449.9,55.8L466.1,69.8L468.5,98.5L462.3,100.0L456.9,107.5L439.4,106.6L427.0,116.0L405.7,119.9L392.3,109.4L387.7,90.8L391.8,76.0L395.9,76.4L397.4,67.5L416.6,60.7L423.8,59.0L434.9,56.4Z"},{"n":"Montenegro","d":"M375.0,43.9L366.2,47.8L364.1,39.5L350.1,61.2L352.2,75.1L345.5,71.7L336.3,57.5L322.3,48.7L325.9,41.2L330.7,16.9L341.3,6.5L347.3,2.4L356.0,10.1L360.6,16.3L371.3,21.0L383.7,30.2L381.1,34.1Z"},{"n":"Croatia","d":"M277.6,0L284.9,5.9L297.2,24.5L325.9,41.2L322.3,48.7L291.8,32.4L273.0,16.4L243.4,3.1L240.8,0L277.6,0Z"},{"n":"Algeria","d":"M0,459.6L17.6,473.2L31.4,541.3L37.3,560L0,560Z"},{"n":"Kosovo","d":"M391.8,76.0L389.6,60.2L381.9,55.8L375.0,43.9L381.1,34.1L388.8,30.8L393.2,16.1L399.1,13.6L403.7,20.0L409.8,22.7L414.0,29.7L419.4,31.8L425.7,40.1L430.3,39.8L426.6,50.5L422.8,55.8L423.8,59.0L416.6,60.7L397.4,67.5L395.9,76.4Z"},{"n":"Bosnia and Herz.","d":"M355.0,0L354.9,0.4L347.3,2.4L341.3,6.5L330.7,16.9L325.9,41.2L325.9,41.2L297.2,24.5L284.9,5.9L277.6,0L355.0,0Z"},{"n":"Lebanon","d":"M886.1,427.9L877.3,428.4L874.4,435.3L863.5,435.2L875.1,403.4L891.2,375.8L891.8,374.4L906.4,376.5L911.6,391.8L894.0,406.6Z"},{"n":"France","d":"M7.5,42.2L28.4,25.3L33.9,63.1L23.2,96.7L8.5,87.9L1.0,58.5Z"},{"n":"N. Cyprus","d":"M785.8,354.8L788.0,354.6L792.7,345.0L816.1,345.6L845.6,333.7L823.7,350.6L826.1,358.1L822.6,356.7L816.4,359.7L811.5,358.9L809.9,360.4L809.3,356.4L807.0,353.9L800.7,353.5L791.9,356.9Z"},{"n":"Cyprus","d":"M785.8,354.8L791.9,356.9L800.7,353.5L807.0,353.9L809.3,356.4L809.9,360.4L811.5,358.9L816.4,359.7L822.6,356.7L826.1,358.1L827.1,361.3L793.8,377.3L777.9,372.2L770.4,356.3Z"},{"n":"Iraq","d":"M1000,472.2L995.5,471.0L995.5,471.0L982.4,424.0L1000,414.0L1000,472.2Z"},{"n":"Palestine","d":"M872.3,496.6L857.0,501.8L858.4,491.7L866.7,486.5L858.6,482.3L865.4,456.7L877.1,462.0L877.1,485.5Z"}],
+ coast:"M776.5,560L775.8,558.5L774.2,560L0,560L0,281.0L32.3,265.9L55.1,270.8L54.0,291.4L81.6,276.5L83.9,284.2L67.7,304.1L67.4,322.7L78.7,332.6L74.5,367.0L53.1,386.8L59.3,408.1L76.0,408.8L84.2,427.3L96.5,433.4L134.6,446.7L148.3,443.4L175.4,449.8L218.4,467.0L233.6,501.0L262.8,508.3L308.4,524.2L343.0,542.8L358.9,533.1L374.4,515.7L366.8,486.6L377.0,468L400.4,450.0L422.8,444.7L466.6,452.6L477.7,469.8L489.8,469.9L500.1,476.5L532.4,481.0L540.3,493.6L583.4,493.0L614.7,503.0L646.8,514.2L661.9,520.1L686.9,508.1L700.2,497.2L728.8,494.1L752.0,498.9L760.7,517.7L768.3,505.3L794.2,514.3L819.6,516.4L835.6,506.9L844.9,494.4L842.7,492.2L851.4,474.4L857.9,445.3L862.6,435.6L863.5,435.2L875.1,403.4L891.2,375.8L891.8,374.4L888.7,344.1L896.7,327.7L884.8,309.5L897.0,294.3L877.3,297.8L850.1,288.5L827.8,311.7L778.6,316.2L752.3,294.6L717.3,293.2L709.8,309.9L687.4,314.7L656.1,293.3L620.7,294.0L601.4,253.5L577.7,230.7L593.4,198.4L572.9,178.4L608.9,137.9L658.9,136.2L672.5,103.6L734.3,109.3L773.3,81.3L811.2,69.0L864.8,68.0L921.4,98.7L968.1,115.3L1000,109.7L1000,560ZM645.0,0L633.5,12.7L621.7,44.4L632.1,69.4L636.0,86.2L664.3,100.1L658.4,110.7L619.8,113.1L606.1,126.3L579.0,149.3L568.8,129.4L569.1,120.7L549.4,119.4L532.5,115.4L493.2,126.5L515.6,150.5L499.2,157.4L481.2,157.4L464.0,135.5L457.9,144.9L465.2,170.2L481.4,189.9L469.2,199.0L487.3,218.2L503.3,230.2L503.7,253.4L473.7,242.5L483.3,263.5L462.7,267.8L475.0,303.5L453.5,304.1L426.9,286.5L414.7,253.9L409.0,226.5L396.4,207.4L379.7,183.5L377.6,171.6L372.0,168.7L371.4,159.4L353.4,145.1L350.6,124.8L353.3,95.4L357.7,81.9L352.2,75.1L345.5,71.7L336.3,57.5L322.3,48.7L291.8,32.4L273.0,16.4L243.4,3.1L240.8,0L645.0,0ZM162.8,0L179.0,36.3L215.1,71.7L240.4,71.5L248.4,81.1L239.3,89.7L268.4,105.4L292.2,118.3L320.0,140.6L323.4,148.6L317.3,163.7L299.3,143.9L271.0,136.9L257.5,164.4L280.9,180.0L277.0,201.9L263.5,204.3L246.2,239.8L232.6,243.0L232.7,230.4L239.4,208.2L246.4,199.3L233.8,175.0L223.9,153.7L210.4,148.4L200.8,130.0L179.9,122.3L165.9,104.9L141.9,102.2L116.5,82.6L86.8,54.2L64.8,28.8L58.2,0L162.8,0ZM7.5,42.2L28.4,25.3L33.9,63.1L23.2,96.7L8.5,87.9L1.0,58.5ZM576.7,348.5L572.7,360.2L525.9,363.6L526.3,357.0L486.7,349.3L492.8,332.3L510.5,345.8L535.7,343.5L559.9,346.3L559.1,353.2ZM202.7,233.3L227.4,229.8L215.7,262.1L220.5,274.7L213.7,295.5L188.8,280.3L172.3,275.9L127.1,255.2L131.6,234.0L169.5,237.8ZM0,116.6L6.4,117.4L6.4,117.4L22.6,104.1L42.0,134.5L37.4,190.4L22.7,187.7L9.5,201.7L0,193.1L0,116.6ZM785.8,354.8L788.0,354.6L792.7,345.0L816.1,345.6L845.6,333.7L823.7,350.6L826.1,358.1L827.1,361.3L793.8,377.3L777.9,372.2L770.4,356.3Z",
+ borders:"M863.5,435.2L874.4,435.3L877.3,428.4L886.1,427.9L886.5,443.8L882.1,449.6L882.8,449.9L877.1,462.0L865.4,456.7L858.6,482.3L866.7,486.5L858.4,491.7L857.0,501.8L872.3,496.6L873.1,511.4L860.0,560M853.1,560L835.6,506.9M891.8,374.4L906.4,376.5L911.6,391.8L894.0,406.6L886.1,427.9M877.1,462.0L877.1,485.5L872.3,496.6M96.5,433.4L94.7,463.0L78.9,474.0L68.8,486.3L46.5,501.0L50.0,516.6L47.2,532.6L31.4,541.3L17.6,473.2L0,459.6M31.4,541.3L37.3,560M882.8,449.9L918.9,465.1L982.4,424.0L995.5,471.0L989.3,476.8L924.4,495.9L956.7,533.7L946.0,540.2L940.6,552.7L915.8,557.9L914.6,560M982.4,424.0L1000,414.0M1000,472.2L995.5,471.0M896.7,327.7L905.3,318.9L914.1,310.1L915.8,287.6L926.5,295.5L962.2,284.2L979.4,291.8L1000,291.7M632.1,69.4L604.2,63.6L571.1,77.3L570.8,98.9L541.3,103.0L518.5,87.9L492.5,99.8L468.5,98.5L466.1,69.8L449.9,55.8L455.3,49.5L451.8,44.3L457.2,30.2L469.5,16.3L456.1,0M571.1,77.3L586.9,88.8L576.9,115.8L569.1,120.7M377.6,171.6L392.6,151.1L394.5,137.2L405.1,131.1L405.7,119.9L427.0,116.0L439.4,106.6L456.9,107.5L462.3,100.0L468.5,98.5M352.2,75.1L350.1,61.2L364.1,39.5L366.2,47.8L375.0,43.9L381.9,55.8L389.6,60.2L391.8,76.0L387.7,90.8L392.3,109.4L405.7,119.9M277.6,0L284.9,5.9L297.2,24.5L325.9,41.2L322.3,48.7M826.1,358.1L822.6,356.7L816.4,359.7L811.5,358.9L809.9,360.4L809.3,356.4L807.0,353.9L800.7,353.5L791.9,356.9L785.8,354.8M528.1,560L525.2,551.2L533.5,528.0L528.5,511.8L540.3,493.6M355.0,0L354.9,0.4L347.3,2.4L341.3,6.5L330.7,16.9L325.9,41.2M391.8,76.0L395.9,76.4L397.4,67.5L416.6,60.7L423.8,59.0L434.9,56.4L449.9,55.8M423.8,59.0L422.8,55.8L426.6,50.5L430.3,39.8L425.7,40.1L419.4,31.8L414.0,29.7L409.8,22.7L403.7,20.0L399.1,13.6L393.2,16.1L388.8,30.8L381.1,34.1L383.7,30.2L371.3,21.0L360.6,16.3L356.0,10.1L347.3,2.4M381.1,34.1L375.0,43.9",
+ grat:{"mer":[[48.2,10],[210.4,15],[372.7,20],[534.9,25],[697.1,30],[859.4,35]],"par":[[360.4,35],[155.8,40]]},
+ lbl:{"Italy":[113.1,43.4],"Greece":[424.6,172.6],"Turkey":[814,202],"Syria":[976.2,376.2],"Lebanon":[882.1,386],"Israel":[854.5,519],"Cyprus":[799.4,376.2],"Egypt":[703.6,537.8],"Libya":[356.4,530.3],"Tunisia":[61.2,403.7],"Jordan":[937.3,530.3],"Albania":[372.7,130.2],"North Macedonia":[424.6,74.1],"Bulgaria":[547.9,39]},
+ malta:[192.5,324.5],
+ sea:[268.8,430.9],
+ xy:{"rome":[129.2,74],"puteoli":[181.9,120.7],"rhegium":[231.5,234.7],"syracuse":[219.7,277.1],"malta":[194.7,324.6],"philippi":[511.8,112.5],"thessalonica":[468.2,128.5],"berea":[444.2,133.5],"athens":[493.6,239.9],"corinth":[467.8,241.7],"troas":[572.5,166.3],"ephesus":[610.8,241.3],"miletus":[608.8,258.6],"pisidian":[735.4,227.1],"iconium":[777.8,244.4],"lystra":[776.6,256.5],"derbe":[804.2,265.9],"perga":[724.8,281.7],"tarsus":[856,283.5],"antiochsyria":[897.2,312.5],"salamis":[823.7,358.8],"paphos":[776,369.3],"damascus":[900.8,418.7],"jerusalem":[866.3,486],"caesarea":[855.9,458],"tyre":[865.7,428.2],"sidon":[871.4,417.1],"myra":[696.7,310.7],"fairhavens":[528.4,363]}
+};
+
+/* ============================================================
+   2. SVG ART LIBRARY
+   viewBox 0 0 160 110 · horizon ~72 · iconographic, not realistic
+   ============================================================ */
+let _uid=0; const uid=()=>"g"+(++_uid);
+
+const PAL={
+ calm:     {s1:"#3A3018",s2:"#9A7529",s3:"#D9AF4E",gr:"#241E12",gr2:"#171308",ln:"#C9A227",fg:"#100E09",hi:"#E8CE72",tilt:0},
+ turbulent:{s1:"#221A30",s2:"#4B3878",s3:"#7C5FB8",gr:"#1A1622",gr2:"#100D18",ln:"#A98BE0",fg:"#0A0810",hi:"#C9A227",tilt:7},
+ dark:     {s1:"#0C0B09",s2:"#1E1A12",s3:"#3A3018",gr:"#0A0908",gr2:"#060505",ln:"#7A6318",fg:"#040404",hi:"#C9A227",tilt:13}
+};
+
+/* ---- primitives ---- */
+function fig(x,b,h,c,lean){
+  const hr=h*0.13, hy=b-h+hr, sw=h*0.19, bw=h*0.30;
+  const t=lean?` transform="rotate(${lean} ${x} ${b})"`:"";
+  return `<g fill="${c}"${t}><circle cx="${x}" cy="${hy}" r="${hr}"/>`+
+    `<path d="M${x-sw} ${hy+hr*1.25} Q${x} ${hy+hr*0.5} ${x+sw} ${hy+hr*1.25} L${x+bw} ${b} L${x-bw} ${b} Z"/></g>`;
+}
+function figArms(x,b,h,c,up){
+  const hr=h*0.13, hy=b-h+hr, sw=h*0.19, bw=h*0.30, ay=hy+hr*1.5;
+  const a=up
+    ? `<path d="M${x-sw} ${ay} L${x-sw*2.4} ${ay-h*0.30}" stroke="${c}" stroke-width="${h*0.075}" stroke-linecap="round" fill="none"/>`+
+      `<path d="M${x+sw} ${ay} L${x+sw*2.4} ${ay-h*0.30}" stroke="${c}" stroke-width="${h*0.075}" stroke-linecap="round" fill="none"/>`
+    : `<path d="M${x+sw} ${ay} L${x+sw*2.8} ${ay+h*0.06}" stroke="${c}" stroke-width="${h*0.075}" stroke-linecap="round" fill="none"/>`;
+  return `<g><circle cx="${x}" cy="${hy}" r="${hr}" fill="${c}"/>`+a+
+    `<path d="M${x-sw} ${hy+hr*1.25} Q${x} ${hy+hr*0.5} ${x+sw} ${hy+hr*1.25} L${x+bw} ${b} L${x-bw} ${b} Z" fill="${c}"/></g>`;
+}
+function crowd(x0,x1,b,h,c,n,seed){
+  let o="",st=(x1-x0)/(n-1);
+  for(let i=0;i<n;i++){const j=((i*seed)%7)/7;o+=fig(x0+i*st,b+j*2,h*(0.82+j*0.4),c,0);}
+  return o;
+}
+function rays(cx,cy,n,r0,r1,c,w,op){
+  let o="";for(let i=0;i<n;i++){const a=(i/n)*Math.PI*2;
+    o+=`<line x1="${(cx+Math.cos(a)*r0).toFixed(1)}" y1="${(cy+Math.sin(a)*r0).toFixed(1)}" x2="${(cx+Math.cos(a)*r1).toFixed(1)}" y2="${(cy+Math.sin(a)*r1).toFixed(1)}" stroke="${c}" stroke-width="${w}" stroke-linecap="round" opacity="${op}"/>`;}
+  return o;
+}
+function col(x,b,h,w,c){
+  return `<g fill="${c}"><rect x="${x-w/2-1}" y="${b-2}" width="${w+2}" height="2.4"/>`+
+   `<rect x="${x-w/2}" y="${b-h}" width="${w}" height="${h}"/>`+
+   `<rect x="${x-w/2-1.4}" y="${b-h-2.2}" width="${w+2.8}" height="2.4"/></g>`;
+}
+function ship(x,y,s,c,ln){
+  return `<g transform="translate(${x} ${y}) scale(${s})" fill="${c}">`+
+   `<path d="M-18 0 Q0 9 18 0 L14 4 Q0 12 -14 4 Z"/>`+
+   `<rect x="-0.7" y="-20" width="1.4" height="20"/>`+
+   `<path d="M0.8 -18 L11 -5 L0.8 -5 Z" fill="${ln}" opacity=".7"/>`+
+   `<path d="M-0.8 -18 L-9 -5 L-0.8 -5 Z" fill="${ln}" opacity=".45"/></g>`;
+}
+function scroll(x,y,s,c,ln){
+  return `<g transform="translate(${x} ${y}) scale(${s})">`+
+   `<rect x="-9" y="-6" width="18" height="12" fill="${c}" opacity=".9"/>`+
+   `<rect x="-11" y="-7.4" width="2.6" height="14.8" rx="1.3" fill="${ln}"/>`+
+   `<rect x="8.4" y="-7.4" width="2.6" height="14.8" rx="1.3" fill="${ln}"/>`+
+   `<g stroke="${ln}" stroke-width=".7" opacity=".55"><line x1="-6" y1="-2.5" x2="6" y2="-2.5"/><line x1="-6" y1="0" x2="6" y2="0"/><line x1="-6" y1="2.5" x2="3" y2="2.5"/></g></g>`;
+}
+function flame(x,y,s,c1,c2){
+  return `<g transform="translate(${x} ${y}) scale(${s})">`+
+   `<path d="M0 -10 Q5 -4 4 1 Q3.4 6 0 6.6 Q-3.4 6 -4 1 Q-5 -4 0 -10Z" fill="${c1}" opacity=".9"/>`+
+   `<path d="M0 -5 Q2.4 -1.6 2 1 Q1.6 4 0 4.4 Q-1.6 4 -2 1 Q-2.4 -1.6 0 -5Z" fill="${c2}"/></g>`;
+}
+function wall(x,y,w,h,c,ln){
+  let o=`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${c}"/>`;
+  for(let i=0;i<w/9;i++)o+=`<rect x="${x+i*9}" y="${y}" width="4.5" height="3.4" fill="${c}"/>`;
+  o+=`<g stroke="${ln}" stroke-width=".4" opacity=".3">`;
+  for(let r=1;r<h/6;r++)o+=`<line x1="${x}" y1="${y+r*6}" x2="${x+w}" y2="${y+r*6}"/>`;
+  return o+`</g>`;
+}
+function chain(x,y,n,r,c){
+  let o="";for(let i=0;i<n;i++)o+=`<ellipse cx="${x}" cy="${y+i*r*1.55}" rx="${i%2?r*0.55:r}" ry="${r*0.95}" fill="none" stroke="${c}" stroke-width="1.1"/>`;
+  return o;
+}
+
+/* ---- scene builder ---- */
+function art(key,tone){
+  const p=PAL[tone], u=uid();
+  const sky=`<defs>
+    <linearGradient id="${u}s" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="${p.s1}"/><stop offset=".62" stop-color="${p.s2}"/><stop offset="1" stop-color="${p.s3}"/></linearGradient>
+    <linearGradient id="${u}g" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="${p.gr}"/><stop offset="1" stop-color="${p.gr2}"/></linearGradient>
+    <radialGradient id="${u}r"><stop offset="0" stop-color="#FFF6D8" stop-opacity=".92"/>
+      <stop offset=".22" stop-color="${p.hi}" stop-opacity=".62"/>
+      <stop offset=".55" stop-color="${p.hi}" stop-opacity=".20"/>
+      <stop offset="1" stop-color="${p.hi}" stop-opacity="0"/></radialGradient>
+  </defs><rect width="160" height="110" fill="url(#${u}s)"/>`;
+  /* dark scenes: rim-light silhouettes so they separate from the ground */
+  const rim=s=>tone==="dark"?`<g stroke="${p.ln}" stroke-width=".55" stroke-opacity=".45">${s}</g>`:s;
+  const T=p.tilt;
+  const ground=(y=72)=>`<path d="M-6 ${y+T} L166 ${y-T} L166 116 L-6 116 Z" fill="url(#${u}g)"/>`;
+  const sun=(x,y,r)=>`<circle cx="${x}" cy="${y}" r="${r}" fill="url(#${u}r)"/>`;
+  const stars=n=>{let o="";for(let i=0;i<n;i++){const x=(i*37)%158+1,y=(i*23)%50+3;o+=`<circle cx="${x}" cy="${y}" r=".7" fill="#F2E8CC" opacity="${.2+((i*13)%5)/9}"/>`;}return o;};
+  const hills=`<path d="M-6 ${68+T} Q28 ${52+T} 58 ${66+T} Q92 ${46} 124 ${64-T} Q146 ${56-T} 166 ${63-T} L166 80 L-6 80 Z" fill="${p.gr}" opacity=".85"/>`;
+  const S=[];
+
+  switch(key){
+  case "tarsus":
+    S.push(sun(128,22,18),hills,ground(74));
+    S.push(`<g fill="${p.fg}" opacity=".92">`+
+      `<rect x="18" y="42" width="9" height="32"/><rect x="30" y="36" width="11" height="38"/>`+
+      `<rect x="44" y="46" width="8" height="28"/>`+
+      `<path d="M62 74 L62 50 Q78 36 94 50 L94 74 Z"/>`+
+      `<rect x="100" y="44" width="10" height="30"/><rect x="113" y="52" width="7" height="22"/></g>`);
+    S.push(`<path d="M70 74 L70 60 Q78 51 86 60 L86 74 Z" fill="${p.s3}" opacity=".5"/>`);
+    S.push(`<line x1="134" y1="74" x2="134" y2="46" stroke="${p.ln}" stroke-width="1.4"/>`,
+      `<rect x="128" y="46" width="12" height="6" fill="${p.ln}" opacity=".8"/>`);
+    S.push(fig(78,86,20,p.fg));
+    break;
+  case "gamaliel":
+    S.push(`<rect width="160" height="110" fill="${p.s1}"/>`,sun(80,13,20));
+    S.push(col(24,84,54,9,p.fg),col(136,84,54,9,p.fg));
+    S.push(`<rect x="14" y="84" width="132" height="26" fill="url(#${u}g)"/>`);
+    S.push(`<rect x="58" y="66" width="44" height="18" rx="2" fill="${p.fg}" opacity=".85"/>`);
+    S.push(fig(80,66,30,p.fg));
+    S.push(scroll(80,44,0.62,p.s2,p.ln));
+    S.push(fig(56,84,15,p.fg),fig(104,84,14,p.fg));
+    S.push(`<circle cx="80" cy="52" r="1.6" fill="${p.hi}" opacity=".8"/>`);
+    break;
+  case "stephen":
+    S.push(sun(26,19,15),ground(78));
+    S.push(crowd(58,150,80,26,p.fg,7,3));
+    S.push(`<g fill="${p.ln}" opacity=".85">`+
+      [[68,30],[86,20],[102,34],[118,24],[94,44],[76,46]].map(([x,y])=>`<circle cx="${x}" cy="${y}" r="2.6"/>`).join("")+`</g>`);
+    S.push(`<g stroke="${p.ln}" stroke-width=".6" opacity=".4">`+
+      [[68,30],[86,20],[102,34]].map(([x,y])=>`<line x1="${x-9}" y1="${y+9}" x2="${x}" y2="${y}"/>`).join("")+`</g>`);
+    S.push(`<path d="M52 82 Q64 70 78 78 L80 84 L50 86 Z" fill="${p.fg}"/>`,
+      `<circle cx="49" cy="78" r="4.6" fill="${p.fg}"/>`);
+    S.push(`<circle cx="49" cy="72" r="9" fill="${p.hi}" opacity=".16"/>`);
+    S.push(fig(20,86,30,p.fg));
+    S.push(`<g fill="${p.fg}"><path d="M8 62 Q14 58 20 62 L21 78 L7 78 Z" opacity=".9"/></g>`);
+    S.push(`<circle cx="20" cy="58" r="12" fill="#8A6ACC" opacity=".22"/>`);
+    break;
+  case "damascus":
+    S.push(`<rect width="160" height="110" fill="${p.s1}"/>`);
+    S.push(sun(78,26,46));
+    S.push(rays(78,26,18,10,74,"#FFF6D8",1.3,.55));
+    S.push(rays(78,26,9,14,96,p.hi,.7,.35));
+    S.push(ground(80));
+    S.push(wall(112,58,54,22,p.fg,p.ln));
+    S.push(`<path d="M0 110 L58 80 L102 80 L160 110 Z" fill="${p.gr2}" opacity=".55"/>`);
+    S.push(`<g fill="${p.fg}"><ellipse cx="62" cy="94" rx="24" ry="6"/>`+
+      `<path d="M40 96 Q56 78 76 88 L82 96 Z"/><circle cx="38" cy="92" r="5.4"/>`+
+      `<path d="M60 86 L74 66" stroke="${p.fg}" stroke-width="3.4" stroke-linecap="round"/></g>`);
+    S.push(`<circle cx="78" cy="26" r="9" fill="#FFF6D8" opacity=".95"/>`);
+    break;
+  case "ananias":
+    S.push(`<rect width="160" height="110" fill="${p.s1}"/>`,sun(120,22,20));
+    S.push(`<rect x="0" y="84" width="160" height="26" fill="url(#${u}g)"/>`);
+    S.push(`<path d="M108 84 L108 42 Q124 28 140 42 L140 84 Z" fill="${p.fg}" opacity=".9"/>`);
+    S.push(`<path d="M114 84 L114 48 Q124 38 134 48 L134 84 Z" fill="${p.s3}" opacity=".45"/>`);
+    S.push(figArms(58,84,34,p.fg,false));
+    S.push(fig(86,84,32,p.fg));
+    S.push(`<circle cx="86" cy="58" r="11" fill="${p.hi}" opacity=".2"/>`);
+    S.push(`<g fill="${p.hi}" opacity=".85">`+
+      [[84,66],[89,70],[82,74],[90,77],[86,81]].map(([x,y])=>`<ellipse cx="${x}" cy="${y}" rx="1.5" ry=".8" transform="rotate(28 ${x} ${y})"/>`).join("")+`</g>`);
+    break;
+  case "basket":
+    S.push(`<rect width="160" height="110" fill="${p.s1}"/>`,stars(26));
+    S.push(`<circle cx="128" cy="22" r="9" fill="${p.hi}" opacity=".55"/>`,`<circle cx="124" cy="20" r="8" fill="${p.s1}"/>`);
+    S.push(wall(0,0,84,110,p.gr,p.ln));
+    S.push(`<rect x="80" y="0" width="4" height="110" fill="${p.gr2}"/>`);
+    S.push(`<rect x="56" y="24" width="16" height="18" rx="2" fill="${p.s1}"/>`);
+    S.push(`<line x1="64" y1="42" x2="64" y2="66" stroke="${p.ln}" stroke-width="1" opacity=".8"/>`);
+    S.push(`<path d="M52 66 L76 66 L72 84 L56 84 Z" fill="${p.ln}" opacity=".55"/>`,
+      `<g stroke="${p.gr2}" stroke-width=".7" opacity=".7"><line x1="53" y1="72" x2="75" y2="72"/><line x1="55" y1="78" x2="73" y2="78"/></g>`);
+    S.push(`<circle cx="64" cy="62" r="4" fill="${p.fg}"/>`);
+    S.push(`<circle cx="64" cy="33" r="3.2" fill="${p.fg}"/>`);
+    break;
+  case "silent":
+    S.push(sun(80,40,20),hills,ground(76));
+    S.push(`<path d="M62 110 Q76 88 80 77 Q84 88 98 110 Z" fill="${p.s3}" opacity=".28"/>`);
+    S.push(`<g stroke="${p.ln}" stroke-width=".5" opacity=".25">`+
+      [86,94,102].map(y=>`<line x1="${60-(y-86)*1.6}" y1="${y}" x2="${100+(y-86)*1.6}" y2="${y}"/>`).join("")+`</g>`);
+    S.push(fig(80,84,13,p.fg));
+    break;
+  case "barnabas":
+    S.push(sun(120,24,18),hills,ground(76));
+    S.push(`<path d="M0 110 Q40 86 80 80 Q120 86 160 110 Z" fill="${p.s3}" opacity=".2"/>`);
+    S.push(fig(64,86,26,p.fg),fig(96,86,27,p.fg));
+    S.push(`<path d="M72 72 L88 72" stroke="${p.fg}" stroke-width="3" stroke-linecap="round"/>`);
+    S.push(`<circle cx="80" cy="72" r="6" fill="${p.hi}" opacity=".26"/>`);
+    break;
+  case "christians":
+    S.push(sun(80,22,18),ground(80));
+    S.push(`<path d="M28 80 L28 46 Q54 26 80 46 L80 80 Z" fill="${p.fg}" opacity=".55"/>`);
+    S.push(`<path d="M80 80 L80 46 Q106 26 132 46 L132 80 Z" fill="${p.fg}" opacity=".55"/>`);
+    S.push(crowd(30,130,92,24,p.fg,8,5));
+    S.push(flame(80,40,0.85,p.hi,"#FFF6D8"));
+    S.push(`<circle cx="80" cy="36" r="15" fill="${p.hi}" opacity=".14"/>`);
+    break;
+  case "elymas":
+    S.push(`<rect width="160" height="110" fill="${p.s1}"/>`,sun(28,22,16));
+    S.push(ground(82));
+    S.push(col(20,82,52,8,p.fg),col(142,82,52,8,p.fg));
+    S.push(figArms(52,82,34,p.fg,false));
+    S.push(`<g transform="translate(104 82)"><g fill="${p.fg}">`+
+      `<circle cx="0" cy="-30" r="4.4"/><path d="M-7 -24 Q0 -27 7 -24 L11 0 L-11 0 Z"/>`+
+      `<path d="M-6 -24 L-14 -32" stroke="${p.fg}" stroke-width="2.6" stroke-linecap="round"/>`+
+      `<path d="M6 -24 L14 -32" stroke="${p.fg}" stroke-width="2.6" stroke-linecap="round"/></g></g>`);
+    S.push(`<g stroke="${p.gr2}" stroke-width="1.4" fill="none" opacity=".8">`+
+      `<path d="M96 46 Q104 38 112 46"/><path d="M92 52 Q104 42 116 52"/></g>`);
+    S.push(`<line x1="66" y1="56" x2="94" y2="52" stroke="${p.hi}" stroke-width="1.2" opacity=".8"/>`);
+    S.push(fig(128,82,22,p.fg));
+    break;
+  case "johnmark":
+    S.push(sun(32,24,16),hills,ground(76));
+    S.push(`<path d="M78 110 Q80 90 82 78 L88 78 Q96 92 120 110 Z" fill="${p.s3}" opacity=".22"/>`);
+    S.push(`<path d="M78 110 Q60 92 40 78 L48 78 Q68 92 78 110 Z" fill="${p.gr2}" opacity=".5"/>`);
+    S.push(fig(94,94,22,p.fg),fig(110,96,21,p.fg));
+    S.push(fig(48,80,11,p.fg,-6));
+    S.push(`<circle cx="48" cy="74" r="7" fill="${p.gr2}" opacity=".4"/>`);
+    break;
+  case "expelled":
+    S.push(sun(22,21,14),ground(80));
+    S.push(wall(78,34,88,46,p.gr,p.ln));
+    S.push(`<path d="M104 80 L104 54 Q116 42 128 54 L128 80 Z" fill="${p.gr2}"/>`);
+    S.push(crowd(106,150,74,18,p.fg,5,3));
+    S.push(fig(40,86,28,p.fg),fig(60,88,26,p.fg));
+    S.push(`<g fill="${p.ln}" opacity=".7">`+
+      [[44,90],[50,94],[38,95],[56,92],[46,98]].map(([x,y])=>`<circle cx="${x}" cy="${y}" r="1.3"/>`).join("")+`</g>`);
+    S.push(`<path d="M34 86 L28 78" stroke="${p.fg}" stroke-width="2.4" stroke-linecap="round"/>`);
+    break;
+  case "lystra":
+    S.push(sun(150,16,13));
+    S.push(`<path d="M-6 74 L166 66 L166 116 L-6 116 Z" fill="url(#${u}g)"/>`);
+    S.push(`<ellipse cx="44" cy="92" rx="40" ry="15" fill="${p.hi}" opacity=".10"/>`);
+    S.push(rim(crowd(92,150,74,25,p.fg,6,3)));
+    S.push(`<g fill="${p.ln}" opacity=".55">`+
+      [[70,40],[86,30],[58,48],[100,42],[78,52],[92,58]].map(([x,y])=>`<circle cx="${x}" cy="${y}" r="2.1"/>`).join("")+`</g>`);
+    S.push(`<g stroke="${p.ln}" stroke-width=".5" opacity=".3" fill="none">`+
+      [[70,40],[86,30],[100,42]].map(([x,y])=>`<path d="M${x+13} ${y+11} Q${x+5} ${y-2} ${x} ${y}"/>`).join("")+`</g>`);
+    /* Paul, fallen — rim-lit so he reads against the ground */
+    S.push(`<g fill="${p.fg}" stroke="${p.ln}" stroke-width=".7" stroke-opacity=".55">`+
+      `<path d="M18 96 Q34 84 52 90 Q64 93 70 96 L70 99 L18 99 Z"/>`+
+      `<circle cx="16" cy="91" r="5.6"/>`+
+      `<path d="M40 90 L30 80" stroke-width="2.6" stroke-opacity=".5"/></g>`);
+    /* Timothy, watching from the edge */
+    S.push(`<circle cx="140" cy="84" r="7" fill="${p.hi}" opacity=".14"/>`);
+    S.push(rim(fig(140,96,17,p.fg)));
+    break;
+  case "council":
+    S.push(`<rect width="160" height="110" fill="${p.s1}"/>`,sun(80,8,22));
+    S.push(`<rect y="86" width="160" height="24" fill="url(#${u}g)"/>`);
+    S.push(col(16,88,58,8,p.fg),col(144,88,58,8,p.fg));
+    S.push(`<path d="M30 88 Q80 66 130 88 Z" fill="${p.fg}" opacity=".5"/>`);
+    [34,52,70,90,108,126].forEach((x,i)=>S.push(fig(x,88-((i===2||i===3)?4:0),22,p.fg)));
+    S.push(`<rect x="62" y="72" width="36" height="4" rx="1.6" fill="${p.ln}" opacity=".7"/>`);
+    S.push(scroll(80,66,0.6,p.s2,p.ln));
+    S.push(rays(80,30,10,8,26,p.hi,.7,.35));
+    break;
+  case "peter":
+    S.push(`<rect width="160" height="110" fill="${p.s1}"/>`,sun(80,15,18));
+    S.push(`<rect y="82" width="160" height="28" fill="url(#${u}g)"/>`);
+    S.push(`<rect x="46" y="66" width="68" height="5" rx="2" fill="${p.fg}"/>`,
+      `<rect x="52" y="71" width="4" height="11" fill="${p.fg}"/><rect x="104" y="71" width="4" height="11" fill="${p.fg}"/>`);
+    S.push(figArms(44,82,32,p.fg,false));
+    S.push(fig(116,82,31,p.fg,-4));
+    S.push(`<g stroke="${p.ln}" stroke-width=".9" opacity=".6"><line x1="62" y1="58" x2="98" y2="58"/></g>`);
+    S.push(crowd(74,92,82,16,p.fg,3,2));
+    break;
+  case "vision":
+    S.push(`<rect width="160" height="110" fill="${p.s1}"/>`,stars(30));
+    S.push(`<rect y="76" width="160" height="34" fill="${p.gr2}"/>`);
+    S.push(`<g stroke="${p.ln}" stroke-width=".6" opacity=".3">`+
+      [80,86,92,98].map(y=>`<line x1="0" y1="${y}" x2="160" y2="${y}"/>`).join("")+`</g>`);
+    S.push(`<circle cx="118" cy="26" r="22" fill="${p.hi}" opacity=".1"/>`);
+    S.push(figArms(118,72,32,p.hi,true));
+    S.push(`<g opacity=".5">`+figArms(118,72,32,"#FFF6D8",true)+`</g>`);
+    S.push(fig(34,100,24,p.fg));
+    S.push(`<line x1="46" y1="86" x2="100" y2="66" stroke="${p.hi}" stroke-width=".7" opacity=".45" stroke-dasharray="3 3"/>`);
+    break;
+  case "lydia":
+    S.push(sun(128,21,18),hills,ground(74));
+    S.push(`<rect y="82" width="160" height="28" fill="${p.s2}" opacity=".28"/>`);
+    S.push(`<g stroke="${p.ln}" stroke-width=".7" opacity=".4">`+
+      [86,92,98,104].map(y=>`<path d="M0 ${y} Q40 ${y-3} 80 ${y} T160 ${y}" fill="none"/>`).join("")+`</g>`);
+    S.push(fig(48,82,24,p.fg),fig(66,82,21,p.fg),fig(84,82,22,p.fg));
+    S.push(`<path d="M100 60 Q112 54 124 60 L124 82 L100 82 Z" fill="#8A6ACC" opacity=".55"/>`);
+    S.push(fig(112,82,26,p.fg));
+    S.push(`<circle cx="112" cy="62" r="8" fill="${p.hi}" opacity=".22"/>`);
+    break;
+  case "jail":
+    S.push(`<rect width="160" height="110" fill="${p.gr2}"/>`);
+    /* barred window, the one source of light */
+    S.push(`<rect x="96" y="14" width="44" height="34" rx="2" fill="${p.s3}" opacity=".55"/>`);
+    S.push(`<rect x="96" y="14" width="44" height="34" rx="2" fill="url(#${u}r)" opacity=".5"/>`);
+    S.push(`<g stroke="${p.gr2}" stroke-width="3"><line x1="110" y1="14" x2="110" y2="48"/>`+
+      `<line x1="124" y1="14" x2="124" y2="48"/><line x1="96" y1="31" x2="140" y2="31"/></g>`);
+    /* light spilling onto the floor */
+    S.push(`<path d="M98 48 L140 48 L120 96 L44 96 Z" fill="${p.hi}" opacity=".10"/>`);
+    S.push(`<ellipse cx="82" cy="96" rx="52" ry="8" fill="${p.hi}" opacity=".08"/>`);
+    /* Paul and Silas, singing, arms raised — lit from the right */
+    S.push(rim(figArms(56,96,36,p.fg,true)));
+    S.push(rim(figArms(88,96,33,p.fg,true)));
+    S.push(`<rect y="96" width="160" height="14" fill="${p.gr}"/>`);
+    /* cell bars in the foreground */
+    S.push(`<g stroke="#000" stroke-width="4" opacity=".9">`+
+      [10,32,54,76,98,120,142].map(x=>`<line x1="${x}" y1="0" x2="${x}" y2="110"/>`).join("")+`</g>`);
+    S.push(`<g stroke="${p.ln}" stroke-width=".8" opacity=".45">`+
+      [10,32,54,76,98,120,142].map(x=>`<line x1="${x+2}" y1="0" x2="${x+2}" y2="110"/>`).join("")+`</g>`);
+    /* the crack — the earthquake */
+    S.push(`<path d="M148 0 L136 26 L146 42 L130 74 L140 110" stroke="${p.hi}" stroke-width="2" fill="none" opacity=".9"/>`);
+    break;
+  case "marshill":
+    S.push(sun(24,19,16),ground(84));
+    S.push(`<path d="M-6 92 L34 62 L92 58 L128 84 L166 88 L166 110 L-6 110 Z" fill="${p.gr}"/>`);
+    S.push(col(112,60,34,7,p.fg),col(128,60,34,7,p.fg),col(144,60,34,7,p.fg));
+    S.push(`<path d="M104 26 L152 26 L148 22 L108 22 Z" fill="${p.fg}"/>`);
+    S.push(figArms(56,60,28,p.fg,false));
+    S.push(crowd(20,96,90,20,p.fg,7,3));
+    S.push(`<circle cx="56" cy="42" r="9" fill="${p.hi}" opacity=".2"/>`);
+    break;
+  case "corinth":
+    S.push(sun(26,20,17),hills,ground(78));
+    S.push(`<path d="M84 78 L104 44 L124 78 Z" fill="${p.fg}" opacity=".85"/>`);
+    S.push(`<path d="M100 78 L104 58 L108 78 Z" fill="${p.s3}" opacity=".4"/>`);
+    S.push(`<rect x="34" y="52" width="30" height="26" fill="${p.fg}" opacity=".7"/>`);
+    S.push(`<g stroke="${p.ln}" stroke-width=".6" opacity=".45">`+
+      [38,44,50,56,62].map(x=>`<line x1="${x}" y1="52" x2="${x}" y2="78"/>`).join("")+`</g>`);
+    S.push(fig(70,90,24,p.fg),fig(88,92,22,p.fg));
+    S.push(scroll(26,88,0.5,p.s2,p.ln));
+    break;
+  case "ephesus":
+    S.push(`<rect width="160" height="110" fill="${p.s1}"/>`,sun(80,12,20));
+    S.push(`<rect y="86" width="160" height="24" fill="url(#${u}g)"/>`);
+    S.push(col(20,86,60,8,p.fg),col(46,86,60,7,p.fg),col(114,86,60,7,p.fg),col(140,86,60,8,p.fg));
+    S.push(`<rect x="10" y="20" width="140" height="5" fill="${p.fg}"/>`);
+    S.push(figArms(80,86,32,p.fg,false));
+    S.push(crowd(58,102,94,16,p.fg,5,3));
+    S.push(flame(126,78,0.7,p.hi,"#FFF6D8"));
+    S.push(`<rect x="118" y="80" width="16" height="4" fill="${p.fg}"/>`);
+    break;
+  case "riot":
+    S.push(`<rect width="160" height="110" fill="${p.s1}"/>`,sun(80,26,22));
+    /* the great theatre — tiers rising toward the viewer */
+    S.push(`<g fill="none" stroke="${p.gr}" stroke-width="4.5" opacity=".85">`+
+      [30,46,62,78].map(r=>`<path d="M${80-r*1.55} 114 A${r*1.55} ${r*0.95} 0 0 1 ${80+r*1.55} 114"/>`).join("")+`</g>`);
+    /* the statue of Artemis, silhouetted */
+    S.push(`<g fill="${p.fg}"><rect x="70" y="66" width="20" height="8"/>`+
+      `<rect x="74" y="34" width="12" height="34" rx="2"/><circle cx="80" cy="30" r="6"/>`+
+      `<path d="M74 42 L60 32" stroke="${p.fg}" stroke-width="3" stroke-linecap="round"/>`+
+      `<path d="M86 42 L100 32" stroke="${p.fg}" stroke-width="3" stroke-linecap="round"/></g>`);
+    S.push(`<circle cx="80" cy="40" r="24" fill="#8A6ACC" opacity=".22"/>`);
+    /* the mob, packed in the lower tiers */
+    S.push(`<g fill="${p.fg}">`+
+      Array.from({length:34},(_,i)=>{
+        const row=i%3, k=Math.floor(i/3);
+        const y=[80,92,104][row], x=8+k*13.4+row*5;
+        return `<circle cx="${x.toFixed(1)}" cy="${y}" r="3.4"/><path d="M${(x-4.6).toFixed(1)} ${y+4} Q${x.toFixed(1)} ${y+1} ${(x+4.6).toFixed(1)} ${y+4} L${(x+6).toFixed(1)} ${y+14} L${(x-6).toFixed(1)} ${y+14} Z"/>`;
+      }).join("")+`</g>`);
+    /* raised fists */
+    S.push(`<g stroke="${p.fg}" stroke-width="2.2" stroke-linecap="round">`+
+      [[24,80],[62,78],[104,82],[136,79]].map(([x,y])=>`<line x1="${x}" y1="${y}" x2="${x+3}" y2="${y-12}"/>`).join("")+`</g>`);
+    break;
+  case "miletus":
+    S.push(sun(130,22,18),ground(70));
+    S.push(`<rect y="80" width="160" height="30" fill="${p.s2}" opacity=".3"/>`);
+    S.push(`<g stroke="${p.ln}" stroke-width=".6" opacity=".35">`+
+      [88,96,104].map(y=>`<path d="M0 ${y} Q40 ${y-3} 80 ${y} T160 ${y}" fill="none"/>`).join("")+`</g>`);
+    S.push(ship(126,84,1.05,p.fg,p.ln));
+    S.push(fig(50,80,26,p.fg));
+    S.push(`<g>`+[64,76,88].map((x,i)=>`<path d="M${x-7} 80 Q${x} 66 ${x+7} 80 Z" fill="${p.fg}"/><circle cx="${x}" cy="${66}" r="3.6" fill="${p.fg}"/>`).join("")+`</g>`);
+    S.push(`<circle cx="50" cy="62" r="8" fill="${p.hi}" opacity=".18"/>`);
+    break;
+  case "caesarea":
+    S.push(`<rect width="160" height="110" fill="${p.gr2}"/>`);
+    /* high barred window */
+    S.push(`<rect x="14" y="12" width="34" height="26" rx="3" fill="${p.s3}" opacity=".5"/>`);
+    S.push(`<rect x="14" y="12" width="34" height="26" rx="3" fill="url(#${u}r)" opacity=".45"/>`);
+    S.push(`<g stroke="${p.gr2}" stroke-width="2.6"><line x1="25" y1="12" x2="25" y2="38"/>`+
+      `<line x1="37" y1="12" x2="37" y2="38"/><line x1="14" y1="25" x2="48" y2="25"/></g>`);
+    /* the long shaft of light, and the pool it makes on the floor */
+    S.push(`<path d="M48 16 L48 38 L118 92 L74 92 Z" fill="${p.hi}" opacity=".07"/>`);
+    S.push(`<ellipse cx="94" cy="92" rx="26" ry="6" fill="${p.hi}" opacity=".11"/>`);
+    /* Paul, seated in the light, waiting */
+    S.push(`<g fill="${p.fg}" stroke="${p.ln}" stroke-width=".6" stroke-opacity=".5">`+
+      `<path d="M82 92 Q94 64 108 92 Z"/><circle cx="96" cy="62" r="6.2"/>`+
+      `<path d="M100 76 L112 84" stroke-width="2.4" stroke-opacity=".45"/></g>`);
+    S.push(`<rect y="92" width="160" height="18" fill="${p.gr}"/>`);
+    /* two years of scratched tally marks on the wall */
+    S.push(`<g stroke="${p.ln}" stroke-width=".6" opacity=".3">`+
+      Array.from({length:14},(_,i)=>{const x=124+(i%5)*5, y=44+Math.floor(i/5)*11;
+        return `<line x1="${x}" y1="${y}" x2="${x}" y2="${y+7}"/>`;}).join("")+`</g>`);
+    S.push(chain(140,80,4,3.2,p.ln));
+    break;
+  case "shipwreck":
+    S.push(`<rect width="160" height="110" fill="${p.s1}"/>`,stars(14));
+    S.push(`<circle cx="118" cy="20" r="20" fill="${p.hi}" opacity=".07"/>`);
+    S.push(`<path d="M-6 58 Q20 40 46 58 T100 58 T166 54 L166 110 L-6 110 Z" fill="${p.s2}" opacity=".55"/>`);
+    S.push(`<path d="M-6 70 Q24 50 54 70 T112 70 T166 66 L166 110 L-6 110 Z" fill="${p.gr}" opacity=".85"/>`);
+    S.push(`<g transform="translate(72 62) rotate(-24)">`+
+      `<path d="M-22 0 Q0 10 22 0 L17 6 Q0 15 -17 6 Z" fill="${p.fg}"/>`+
+      `<rect x="-1" y="-24" width="2" height="24" fill="${p.fg}"/>`+
+      `<path d="M1 -22 L13 -6 L1 -6 Z" fill="${p.ln}" opacity=".45"/></g>`);
+    S.push(`<path d="M-6 84 Q28 62 62 84 T130 84 T166 80 L166 110 L-6 110 Z" fill="${p.gr2}"/>`);
+    S.push(`<g stroke="#F2E8CC" stroke-width=".8" opacity=".28">`+
+      [[30,72],[96,74],[132,70]].map(([x,y])=>`<path d="M${x} ${y} q6 -8 12 -2 q6 -7 11 1" fill="none"/>`).join("")+`</g>`);
+    S.push(`<path d="M118 96 L128 88 L140 96 L152 90" stroke="${p.ln}" stroke-width="1.4" fill="none" opacity=".7"/>`);
+    S.push(`<circle cx="136" cy="86" r="9" fill="${p.hi}" opacity=".16"/>`);
+    break;
+  case "rome":
+    S.push(`<rect width="160" height="110" fill="${p.s1}"/>`,stars(18));
+    S.push(`<g fill="${p.gr}" opacity=".9">`+
+      Array.from({length:5},(_,i)=>`<path d="M${8+i*32} 74 L${8+i*32} 52 Q${24+i*32} 38 ${40+i*32} 52 L${40+i*32} 74 Z"/>`).join("")+
+      `<rect x="0" y="34" width="160" height="6"/></g>`);
+    S.push(`<rect y="74" width="160" height="36" fill="${p.gr2}"/>`);
+    S.push(chain(28,80,5,3.2,p.ln));
+    S.push(scroll(78,90,0.85,p.s2,p.ln));
+    S.push(`<path d="M110 96 L128 66" stroke="${p.ln}" stroke-width="1.4" stroke-linecap="round"/>`,
+      `<path d="M126 64 Q132 58 130 68 Z" fill="${p.hi}"/>`);
+    S.push(flame(80,58,1.0,p.hi,"#FFF6D8"));
+    S.push(rays(80,58,12,12,32,p.hi,.7,.4));
+    S.push(`<circle cx="80" cy="58" r="20" fill="${p.hi}" opacity=".1"/>`);
+    break;
+  default:
+    S.push(sun(80,34,32),hills,ground());S.push(fig(80,88,24,p.fg));
+  }
+  return `<svg viewBox="0 0 160 110" preserveAspectRatio="xMidYMid slice" aria-hidden="true">${sky}${S.join("")}</svg>`;
+}
+
+/* ============================================================
+   3. AUDIO — runtime synthesis, no asset files
+   ============================================================ */
+const Snd=(function(){
+  let ctx=null,master=null,verb=null,dry=null,wet=null,on=false,amb=null,ambKey=0;
+
+  function impulse(sec,decay){
+    const rate=ctx.sampleRate,len=Math.floor(rate*sec),buf=ctx.createBuffer(2,len,rate);
+    for(let c=0;c<2;c++){const d=buf.getChannelData(c);
+      for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/len,decay);}
+    return buf;
+  }
+  function noiseBuf(sec){
+    const len=Math.floor(ctx.sampleRate*sec),b=ctx.createBuffer(1,len,ctx.sampleRate),d=b.getChannelData(0);
+    for(let i=0;i<len;i++)d[i]=Math.random()*2-1;
+    return b;
+  }
+  function init(){
+    if(ctx)return;
+    const AC=window.AudioContext||window.webkitAudioContext; if(!AC)return;
+    ctx=new AC();
+    master=ctx.createGain(); master.gain.value=0.26; master.connect(ctx.destination);
+    verb=ctx.createConvolver(); verb.buffer=impulse(1.9,2.6);
+    wet=ctx.createGain(); wet.gain.value=0.42; dry=ctx.createGain(); dry.gain.value=0.85;
+    verb.connect(wet); wet.connect(master); dry.connect(master);
+  }
+  function bus(){return {d:dry,w:verb};}
+  function env(node,t0,a,d,peak){
+    const g=ctx.createGain(); g.gain.setValueAtTime(0.0001,t0);
+    g.gain.exponentialRampToValueAtTime(Math.max(peak,0.0002),t0+a);
+    g.gain.exponentialRampToValueAtTime(0.0001,t0+a+d);
+    node.connect(g); g.connect(dry); g.connect(verb); return g;
+  }
+  function tone(freq,t0,a,d,peak,type,detune){
+    const o=ctx.createOscillator(); o.type=type||"sine"; o.frequency.value=freq;
+    if(detune)o.detune.value=detune;
+    env(o,t0,a,d,peak); o.start(t0); o.stop(t0+a+d+0.06); return o;
+  }
+  function noise(t0,dur,peak,f0,f1,q,type){
+    const s=ctx.createBufferSource(); s.buffer=noiseBuf(Math.max(dur,0.05));
+    const bp=ctx.createBiquadFilter(); bp.type=type||"bandpass"; bp.Q.value=q||1;
+    bp.frequency.setValueAtTime(f0,t0); bp.frequency.exponentialRampToValueAtTime(Math.max(f1,40),t0+dur);
+    s.connect(bp); env(bp,t0,Math.min(0.012,dur*0.3),dur,peak); s.start(t0); s.stop(t0+dur+0.05);
+    return s;
+  }
+  /* FM bell */
+  function bell(freq,t0,dur,peak){
+    const car=ctx.createOscillator(),mod=ctx.createOscillator(),mg=ctx.createGain();
+    car.frequency.value=freq; mod.frequency.value=freq*2.01; mg.gain.value=freq*1.7;
+    mod.connect(mg); mg.connect(car.frequency);
+    const g=ctx.createGain(); g.gain.setValueAtTime(0.0001,t0);
+    g.gain.exponentialRampToValueAtTime(peak,t0+0.012);
+    g.gain.exponentialRampToValueAtTime(0.0001,t0+dur);
+    car.connect(g); g.connect(dry); g.connect(verb);
+    mg.gain.setValueAtTime(freq*1.7,t0); mg.gain.exponentialRampToValueAtTime(freq*0.05,t0+dur*0.7);
+    car.start(t0);mod.start(t0);car.stop(t0+dur+0.06);mod.stop(t0+dur+0.06);
+  }
+
+  const N=n=>440*Math.pow(2,(n-69)/12);
+
+  const api={
+    get enabled(){return on;},
+    toggle(){ init(); if(!ctx)return false;
+      on=!on; if(on){ if(ctx.state==="suspended")ctx.resume(); api.ambient(ambKey);} else api.stopAmbient();
+      return on; },
+    _ok(){return on&&ctx;},
+
+    hover(){ if(!api._ok())return; const t=ctx.currentTime; noise(t,0.09,0.05,2600,7200,1.4); },
+    flip(){ if(!api._ok())return; const t=ctx.currentTime;
+      noise(t,0.06,0.16,1800,420,1.1); tone(N(38),t,0.006,0.11,0.16,"sine"); },
+    open(){ if(!api._ok())return; const t=ctx.currentTime;
+      noise(t,0.13,0.09,900,3400,1.0); tone(N(62),t+0.01,0.02,0.4,0.05,"triangle"); },
+    gold(){ if(!api._ok())return; const t=ctx.currentTime;
+      [0,4,7,12].forEach((s,i)=>bell(N(69+s),t+i*0.075,1.5,0.13));
+      noise(t,0.6,0.035,3000,9000,0.8); },
+
+    will(w){ if(!api._ok())return; const t=ctx.currentTime;
+      if(w==="advancing"){ [0,4,7].forEach(s=>tone(N(50+s),t,0.32,1.5,0.055,"sine")); tone(N(62),t,0.4,1.7,0.03,"triangle"); }
+      else if(w==="resisted"){ tone(N(51),t,0.3,1.5,0.05,"sawtooth"); tone(N(52),t,0.3,1.5,0.045,"sawtooth",14);
+        tone(N(39),t,0.3,1.6,0.05,"sine"); }
+      else { const o=ctx.createOscillator(),f=ctx.createBiquadFilter();
+        o.type="triangle"; o.frequency.value=N(45); f.type="lowpass";
+        f.frequency.setValueAtTime(180,t); f.frequency.exponentialRampToValueAtTime(1400,t+2.1);
+        o.connect(f); env(f,t,1.0,1.4,0.05); o.start(t); o.stop(t+2.6); }
+    },
+    storm(){ if(!api._ok())return; const t=ctx.currentTime;
+      const s=ctx.createBufferSource(); s.buffer=noiseBuf(2.6); s.loop=false;
+      const bp=ctx.createBiquadFilter(); bp.type="bandpass"; bp.Q.value=0.7;
+      const lfo=ctx.createOscillator(),lg=ctx.createGain();
+      lfo.frequency.value=0.9; lg.gain.value=420; bp.frequency.value=560;
+      lfo.connect(lg); lg.connect(bp.frequency);
+      s.connect(bp); env(bp,t,0.5,2.0,0.10); s.start(t); lfo.start(t); s.stop(t+2.6); lfo.stop(t+2.6); },
+    pluck(i){ if(!api._ok())return; const t=ctx.currentTime;
+      const sc=[0,2,4,7,9,12,14]; bell(N(69+sc[i%sc.length]),t,0.7,0.075); },
+    right(){ if(!api._ok())return; const t=ctx.currentTime;
+      [0,4,7,11,12].forEach((s,i)=>bell(N(72+s),t+i*0.06,1.1,0.11)); },
+    wrong(){ if(!api._ok())return; const t=ctx.currentTime;
+      tone(N(53),t,0.05,0.7,0.07,"sine"); tone(N(54),t,0.05,0.7,0.05,"sine",12); },
+    reveal(){ if(!api._ok())return; const t=ctx.currentTime;
+      [0,7,12,16,19,24].forEach((s,i)=>tone(N(50+s),t+i*0.05,0.6,2.6,0.035,i%2?"triangle":"sine"));
+      noise(t,1.8,0.04,400,8000,0.6); },
+
+    ambient(actIdx){ ambKey=actIdx||0; if(!api._ok())return; api.stopAmbient();
+      const t=ctx.currentTime, prog=(ambKey)/7;
+      const root=N(38), third=prog>0.62?N(50):N(49); /* D minor → D major */
+      amb={nodes:[]};
+      [[root,0.030],[N(45),0.020],[third,0.014]].forEach(([f,v],i)=>{
+        const o=ctx.createOscillator(),g=ctx.createGain(),fl=ctx.createBiquadFilter();
+        o.type=i===2?"triangle":"sine"; o.frequency.value=f; o.detune.value=i*4;
+        fl.type="lowpass"; fl.frequency.value=700+prog*900;
+        g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(v,t+2.4);
+        o.connect(fl); fl.connect(g); g.connect(dry); g.connect(verb); o.start(t);
+        amb.nodes.push({o,g});
+      });
+    },
+    stopAmbient(){ if(!amb||!ctx)return; const t=ctx.currentTime;
+      amb.nodes.forEach(({o,g})=>{ try{g.gain.cancelScheduledValues(t);
+        g.gain.setValueAtTime(g.gain.value||0.0001,t);
+        g.gain.exponentialRampToValueAtTime(0.0001,t+1.1); o.stop(t+1.3);}catch(e){} });
+      amb=null; }
+  };
+  return api;
+})();
+
+/* ============================================================
+   TIMELINE — fisheye year axis, AD 5 to 68
+   Cards hang from the year their event BEGAN; the bar under the
+   axis shows how long it ran, so overlaps are visible.
+   ============================================================ */
+const Y0=5, Y1=68;
+/* [first year, last year] for each card, read off the source dates */
+const SPAN={
+ 1:[5,10],   2:[20,30],  3:[31,34],  4:[33,34],  5:[33,34],  6:[36,36],
+ 7:[37,45],  8:[43,45],  9:[45,46], 10:[46,47], 11:[47,47], 12:[47,47],
+13:[48,48], 14:[48,50], 15:[49,49], 16:[49,50], 17:[50,50], 18:[50,50],
+19:[50,51], 20:[50,52], 21:[53,56], 22:[56,56], 23:[57,57], 24:[57,59],
+25:[60,60], 26:[60,67]
+};
+const TL={
+  built:false, pan:0, target:0, ppy:0, W:0, H:0, axisY:0, raf:0, items:[], last:-1,
+  D:2.6,        /* Sarkar–Brown distortion: centre magnifies (D+1)x */
+  SMAX:1.7,     /* card scale at the focus; 1.0 at either edge */
+  tileW:112, tileH:152
+};
+
+function tileHTML(e){
+  const [a,b]=SPAN[e.id];
+  return `<div class="tlItem" data-id="${e.id}" data-rarity="${e.rarity}" data-will="${e.will}"
+        tabindex="0" role="button" aria-label="AD ${a}: ${esc(e.title)}">
+    <div class="tlTile"><div class="tlIn">
+      <div class="tart">${art(e.art,e.tone)}<div class="foil"></div></div>
+      <div class="tname">${esc(e.title)}</div>
+      <div class="tyear">AD ${a}${b>a?"–"+b:""}</div>
+    </div></div></div>`;
+}
+
+function buildTimeline(){
+  const stage=$("#tlStage"), items=$("#tlItems"), svg=$("#tlSvg");
+  TL.W=stage.clientWidth||1000; TL.H=stage.clientHeight||520;
+  TL.axisY=Math.round(TL.H*0.5);
+  /* size the tiles so a fully magnified one still fits between axis and edge */
+  TL.tileH=Math.max(84,Math.floor(Math.min(158,(TL.H/2-28)/TL.SMAX)));
+  TL.tileW=Math.round(TL.tileH*0.74);
+  items.style.setProperty("--tlH",TL.tileH+"px");
+  items.style.setProperty("--tlW",TL.tileW+"px");
+  /* base spacing: the whole life spans roughly three screens before the lens */
+  TL.ppy=Math.max(26,(TL.W*3.1)/(Y1-Y0));
+
+  if(!TL.built){
+    const sorted=[...EVENTS].sort((x,y)=>SPAN[x.id][0]-SPAN[y.id][0]);
+    items.innerHTML=sorted.map(tileHTML).join("");
+    /* alternate above / below the axis so dense years have room */
+    TL.items=sorted.map((e,i)=>{
+      const el=items.querySelector(`.tlItem[data-id="${e.id}"]`);
+      const up=i%2===0; el.classList.add(up?"up":"dn");
+      return {e,el,up,y0:SPAN[e.id][0],y1:SPAN[e.id][1],x:0,s:1};
+    });
+    let g="";
+    for(let y=Y0;y<=Y1;y++){
+      const maj=y%5===0;
+      g+=`<line class="tick${maj?" maj":""}" data-y="${y}"/>`+(maj?`<text class="tickLbl" data-y="${y}"></text>`:"");
+    }
+    g+=`<line class="spine"/><line class="nowLine"/>`;
+    g+=TL.items.map(it=>`<path class="stem" data-id="${it.e.id}"/>`).join("");
+    g+=TL.items.map(it=>`<line class="durbar dur-${it.e.will}" data-id="${it.e.id}"/>`).join("");
+    svg.innerHTML=g;
+    TL.ticks=[...svg.querySelectorAll(".tick")];
+    TL.tickLbls=[...svg.querySelectorAll(".tickLbl")];
+    TL.stems={}; svg.querySelectorAll(".stem").forEach(p=>TL.stems[p.dataset.id]=p);
+    TL.bars={};  svg.querySelectorAll(".durbar").forEach(p=>TL.bars[p.dataset.id]=p);
+    TL.spine=svg.querySelector(".spine"); TL.now=svg.querySelector(".nowLine");
+    TL.built=true;
+  }
+  layoutTimeline();
+}
+
+/* Sarkar–Brown fisheye: magnified at the centre, unity at the edges */
+function lensX(u){
+  const cx=TL.W/2, hw=TL.W/2, D=TL.D;
+  const d=(u-cx)/hw, a=Math.abs(d), sg=d<0?-1:1;
+  let f;
+  if(a<=1) f=((D+1)*a)/(D*a+1);
+  else      f=1+(a-1)/(D+1);          /* keep going, linearly, off-screen */
+  return cx+sg*f*hw;
+}
+function lensScale(u){
+  const a=Math.min(Math.abs((u-TL.W/2)/(TL.W/2)),1);
+  return 1+(TL.SMAX-1)*Math.pow(1-a,2);
+}
+const yearU=y=>TL.W/2+(y-Y0)*TL.ppy-TL.pan;
+
+function layoutTimeline(){
+  const W=TL.W,H=TL.H,ay=TL.axisY;
+  const focus=Y0+TL.pan/TL.ppy;
+  $("#tlYear").textContent="AD "+Math.round(focus);
+
+  /* axis */
+  TL.spine.setAttribute("x1",0);TL.spine.setAttribute("y1",ay);
+  TL.spine.setAttribute("x2",W);TL.spine.setAttribute("y2",ay);
+  TL.now.setAttribute("x1",W/2);TL.now.setAttribute("y1",0);
+  TL.now.setAttribute("x2",W/2);TL.now.setAttribute("y2",H);
+
+  let li=0;
+  for(let y=Y0;y<=Y1;y++){
+    const t=TL.ticks[y-Y0], x=lensX(yearU(y)), maj=y%5===0;
+    const vis=x>-40&&x<W+40;
+    t.setAttribute("x1",x);t.setAttribute("x2",x);
+    t.setAttribute("y1",ay-(maj?11:5));t.setAttribute("y2",ay+(maj?11:5));
+    t.style.display=vis?"":"none";
+    if(maj){
+      const l=TL.tickLbls[li++];
+      l.setAttribute("x",x);l.setAttribute("y",ay+26);
+      l.textContent="AD "+y; l.style.display=vis?"":"none";
+    }
+  }
+
+  /* duration bars sit on the axis */
+  TL.items.forEach(it=>{
+    const b=TL.bars[it.e.id];
+    const x1=lensX(yearU(it.y0)), x2=lensX(yearU(it.y1+0.85));
+    b.setAttribute("x1",x1);b.setAttribute("x2",Math.max(x2,x1+3));
+    const yy=ay+(it.up?-1:1)*(it.e.id%2?15:20);
+    b.setAttribute("y1",yy);b.setAttribute("y2",yy);
+    b.style.display=(x2>-40&&x1<W+40)?"":"none";
+  });
+
+  /* tiles: place at the lensed year, then relax overlaps within each row */
+  TL.items.forEach(it=>{
+    it.anchor=lensX(yearU(it.y0));
+    it.s=lensScale(yearU(it.y0));
+    it.x=it.anchor;
+  });
+  ["up","dn"].forEach(row=>{
+    const set=TL.items.filter(i=>(row==="up")===i.up).sort((a,b)=>a.anchor-b.anchor);
+    const gap=(A,B)=>(TL.tileW*A.s+TL.tileW*B.s)/2+9;
+    /* symmetric relaxation, then a hard sweep that guarantees no overlap,
+       then re-centre the row so it still lines up with the years */
+    for(let pass=0;pass<16;pass++){
+      for(let i=0;i<set.length-1;i++){
+        const A=set[i],B=set[i+1], need=gap(A,B), have=B.x-A.x;
+        if(have<need){const push=(need-have)/2;A.x-=push;B.x+=push;}
+      }
+      for(let i=set.length-1;i>0;i--){
+        const A=set[i-1],B=set[i], need=gap(A,B), have=B.x-A.x;
+        if(have<need){const push=(need-have)/2;A.x-=push;B.x+=push;}
+      }
+    }
+    for(let i=1;i<set.length;i++) set[i].x=Math.max(set[i].x,set[i-1].x+gap(set[i-1],set[i]));
+    let drift=0; set.forEach(i=>drift+=i.x-i.anchor);
+    if(set.length){drift/=set.length; set.forEach(i=>i.x-=drift);}
+  });
+
+  TL.items.forEach(it=>{
+    const ty=ay+(it.up?-22:22);
+    const near=Math.abs(it.anchor-W/2)<70;
+    it.el.classList.toggle("hot",near);
+    it.el.style.transform=`translate(${it.x.toFixed(1)}px,${ty}px) scale(${it.s.toFixed(3)})`;
+    it.el.style.zIndex=String(Math.round(it.s*100));
+    const a=Math.min(Math.abs((it.anchor-W/2)/(W/2)),1);
+    it.el.style.opacity=(it.anchor<-90||it.anchor>W+90)?"0":(0.34+0.66*Math.pow(1-a,0.85)).toFixed(3);
+    it.el.style.visibility=(it.anchor<-160||it.anchor>W+160)?"hidden":"visible";
+    /* leader line: down from the tile, then a dogleg back to the exact year */
+    const st=TL.stems[it.e.id], my=ay+(it.up?-22:22), bend=it.up?my-14:my+14;
+    st.setAttribute("d",`M${it.anchor.toFixed(1)} ${ay} L${it.anchor.toFixed(1)} ${bend.toFixed(1)} L${it.x.toFixed(1)} ${bend.toFixed(1)} L${it.x.toFixed(1)} ${my}`);
+    st.classList.toggle("hot",near);
+  });
+
+  /* a soft chime as each event passes under the lens */
+  const f=Math.round(focus);
+  if(f!==TL.last){
+    if(TL.last>=0&&Snd.enabled){
+      const n=TL.items.filter(i=>i.y0===f).length;
+      for(let i=0;i<n;i++)setTimeout(()=>Snd.pluck(f%7+i),i*110);
+    }
+    TL.last=f;
+  }
+}
+
+function tlClamp(v){return Math.max(0,Math.min(v,(Y1-Y0)*TL.ppy));}
+function tlLoop(){
+  const d=TL.target-TL.pan;
+  if(Math.abs(d)<0.4){TL.pan=TL.target;} else {TL.pan+=d*0.18;}
+  layoutTimeline();
+  TL.raf=(TL.pan!==TL.target)?requestAnimationFrame(tlLoop):0;
+}
+const noMotion=()=>{ try{return window.matchMedia&&window.matchMedia("(prefers-reduced-motion:reduce)").matches;}catch(e){return false;} };
+function tlNudge(px,instant){
+  TL.target=tlClamp(TL.target+px);
+  if(instant||noMotion()){TL.pan=TL.target;layoutTimeline();return;}
+  if(!TL.raf)TL.raf=requestAnimationFrame(tlLoop);
+}
+function tlGoto(year,instant){
+  TL.target=tlClamp((year-Y0)*TL.ppy);
+  if(instant){TL.pan=TL.target;layoutTimeline();}
+  else if(!TL.raf)TL.raf=requestAnimationFrame(tlLoop);
+}
+
+function initTimeline(){
+  const stage=$("#tlStage");
+  if(stage._wired)return;
+  stage._wired=true;
+  stage.addEventListener("wheel",ev=>{
+    /* vertical wheels travel the years too — that is the whole gesture */
+    const d=Math.abs(ev.deltaX)>Math.abs(ev.deltaY)?ev.deltaX:ev.deltaY;
+    if(!d)return;
+    ev.preventDefault();
+    tlNudge(d*(ev.deltaMode===1?18:1.1));
+  },{passive:false});
+  let drag=null;
+  stage.addEventListener("pointerdown",ev=>{
+    if(ev.target.closest(".tlItem"))return;
+    drag={x:ev.clientX,p:TL.target}; stage.setPointerCapture(ev.pointerId);
+  });
+  stage.addEventListener("pointermove",ev=>{
+    if(!drag)return; TL.target=tlClamp(drag.p-(ev.clientX-drag.x)); tlNudge(0);
+  });
+  stage.addEventListener("pointerup",()=>{drag=null});
+  stage.addEventListener("pointercancel",()=>{drag=null});
+  stage.addEventListener("keydown",ev=>{
+    const k=ev.key;
+    if(k==="ArrowRight"){ev.preventDefault();tlNudge(TL.ppy)}
+    else if(k==="ArrowLeft"){ev.preventDefault();tlNudge(-TL.ppy)}
+    else if(k==="Home"){ev.preventDefault();tlGoto(Y0)}
+    else if(k==="End"){ev.preventDefault();tlGoto(Y1)}
+  });
+  stage.addEventListener("click",ev=>{
+    const t=ev.target.closest(".tlItem"); if(t)openCard(+t.dataset.id);
+  });
+  $("#tlFit").addEventListener("click",function(){
+    /* pull back so the whole life fits between the edges */
+    const wide=TL.ppy<=Math.max(26,(TL.W*1.35)/(Y1-Y0))+1;
+    TL.ppy=wide?Math.max(26,(TL.W*3.1)/(Y1-Y0)):Math.max(26,(TL.W*1.35)/(Y1-Y0));
+    this.setAttribute("aria-pressed",String(!wide));
+    TL.target=tlClamp(TL.target); TL.pan=TL.target; layoutTimeline();
+    toast(wide?"Close view — one year at a time":"Whole life in one screen");
+  });
+  window.addEventListener("resize",()=>{ if($("#v-timeline").classList.contains("on")){ TL.built&&buildTimeline(); } });
+}
+
+/* extra runtime styles: neutral "unknown will" state used by the quiz */
+(function(){const s=document.createElement("style");s.textContent=
+`.card.unknown{--f-hi:#6E6558;--f-mid:#4E4738;--f-lo:#332E26}
+ .card.unknown .foil{opacity:0!important;animation:none!important}
+ .card.unknown .willicon{color:var(--tarnish)}
+ .card.unknown .art svg{filter:none!important}
+ .card.reveal-will{animation:willflare .9s var(--ease)}
+ @keyframes willflare{0%{filter:brightness(1)}30%{filter:brightness(1.7) saturate(1.4)}100%{filter:brightness(1)}}`;
+document.head.appendChild(s);})();
+
+/* ============================================================
+   4. CARD RENDERING
+   ============================================================ */
+const CORNER=`<svg viewBox="0 0 20 20"><path d="M1 19 L1 5 Q1 1 5 1 L19 1" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="1.2"/><path d="M4 16 Q4 4 16 4" fill="none" stroke="rgba(255,255,255,.28)" stroke-width="1"/><circle cx="3" cy="3" r="1.6" fill="rgba(255,255,255,.45)"/></svg>`;
+const esc=s=>String(s).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+
+function cardHTML(e,unknown){
+  return `<article class="card${unknown?" unknown":""}" data-id="${e.id}" data-rarity="${e.rarity}" data-tone="${e.tone}" data-will="${e.will}" tabindex="0" role="button" aria-label="${esc(e.title)}, ${e.date}">
+    <div class="frame">
+      <span class="corner c-tl">${CORNER}</span><span class="corner c-tr">${CORNER}</span>
+      <span class="corner c-bl">${CORNER}</span><span class="corner c-br">${CORNER}</span>
+      <div class="inner">
+        <div class="namebar"><span class="cname">${esc(e.title)}</span><span class="cdate">${esc(e.date)}</span></div>
+        <div class="art">${art(e.art,e.tone)}<div class="foil"></div></div>
+        <div class="typeline"><span class="ttext">${esc(e.type)}</span><span class="willicon">${WILL_ICON[e.will]}</span></div>
+        <div class="textbox">
+          <p class="btext">${esc(e.body)}</p>
+          <p class="flavour">${esc(e.flavour)}</p>
+        </div>
+        <div class="statbar"><span class="stag">${esc(e.tag)}</span><span class="statnum">${e.id}</span></div>
+      </div>
+    </div>
+  </article>`;
+}
+
+/* pointer-driven tilt + foil angle */
+function bindTilt(root){
+  root.addEventListener("pointermove",ev=>{
+    const c=ev.target.closest(".card"); if(!c)return;
+    const r=c.getBoundingClientRect();
+    const px=(ev.clientX-r.left)/r.width, py=(ev.clientY-r.top)/r.height;
+    c.classList.add("tilting");
+    c.style.setProperty("--ry",((px-.5)*13).toFixed(2)+"deg");
+    c.style.setProperty("--rx",((.5-py)*13).toFixed(2)+"deg");
+    c.style.setProperty("--mx",(px*100).toFixed(1)+"%");
+    c.style.setProperty("--my",(py*100).toFixed(1)+"%");
+    c.style.setProperty("--foil-angle",(60+px*120).toFixed(0)+"deg");
+  });
+  root.addEventListener("pointerout",ev=>{
+    const c=ev.target.closest(".card"); if(!c)return;
+    if(c.contains(ev.relatedTarget))return;
+    c.classList.remove("tilting");
+    c.style.setProperty("--ry","0deg"); c.style.setProperty("--rx","0deg");
+  });
+  root.addEventListener("pointerenter",ev=>{const c=ev.target.closest&&ev.target.closest(".card");if(c)Snd.hover();},true);
+}
+
+/* ============================================================
+   5. STATE + GALLERY
+   ============================================================ */
+const seen=new Set();
+let filt={tone:"all",will:"all"};
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+
+function renderGallery(){
+  const host=$("#acts"); host.innerHTML="";
+  ACTS.forEach((a,ai)=>{
+    const list=EVENTS.filter(e=>e.act===ai)
+      .filter(e=>filt.tone==="all"||e.tone===filt.tone)
+      .filter(e=>filt.will==="all"||e.will===filt.will);
+    if(!list.length)return;
+    const sec=document.createElement("section");
+    sec.innerHTML=`<div class="actHead"><span class="num">Act ${a.n}</span><h2>${a.t}</h2><hr class="rule"><span class="num">${a.s}</span></div>
+      <div class="grid">${list.map(cardHTML).join("")}</div>`;
+    host.appendChild(sec);
+    sec.querySelectorAll(".card").forEach((c,i)=>c.style.animationDelay=(i*45)+"ms");
+  });
+  updateCount();
+}
+function updateCount(){ $("#count").innerHTML=`Revealed <b>${seen.size}</b> / ${EVENTS.length}`; }
+
+/* ============================================================
+   6. DETAIL MODAL
+   ============================================================ */
+let curId=null;
+function detailHTML(e){
+  const letters=e.letters.map(l=>`<span class="badge letter" data-letter="${esc(l)}">${esc(l)} · ${LETTERS[l][0]}</span>`).join("");
+  return `<div class="detail" data-rarity="${e.rarity}">
+    <span class="corner c-tl">${CORNER}</span><span class="corner c-tr">${CORNER}</span>
+    <span class="corner c-bl">${CORNER}</span><span class="corner c-br">${CORNER}</span>
+    <div class="inner">
+      <p class="meta">Card ${e.id} of 26 · ${esc(e.date)}</p>
+      <h3>${esc(e.title)}</h3>
+      <div class="badges">
+        <span class="badge tone">Circumstance: ${TONE_LABEL[e.tone]}</span>
+        <span class="badge will-${e.will}">${WILL_LABEL[e.will]}</span>
+      </div>
+      <div class="dsec"><h4>What Happened</h4><p>${esc(e.what)}</p></div>
+      <div class="dsec will"><h4>Where God Was In It</h4><p>${esc(e.where)}</p></div>
+      ${letters?`<div class="dsec"><h4>Letters Written Here</h4><div class="badges">${letters}</div></div>`:""}
+      <p class="refline">${esc(e.ref)}</p>
+    </div></div>`;
+}
+function openCard(id,silent){
+  const e=EVENTS.find(x=>x.id===id); if(!e)return;
+  curId=id;
+  const first=!seen.has(id); seen.add(id); updateCount();
+  $("#mFront").innerHTML=cardHTML(e);
+  $("#mBack").innerHTML=detailHTML(e);
+  $("#flipper").classList.remove("flipped");
+  $("#modal").classList.add("on");
+  if(!silent){ Snd.open(); setTimeout(()=>{ if(e.rarity==="gold")Snd.gold(); Snd.will(e.will); },170); }
+  if(first&&seen.size===EVENTS.length) setTimeout(()=>toast("The collection is complete — visit The Trial"),900);
+  $("#closeBtn").focus({preventScroll:true});
+}
+function closeCard(){ $("#modal").classList.remove("on"); curId=null; }
+function step(d){
+  const i=EVENTS.findIndex(e=>e.id===curId);
+  openCard(EVENTS[(i+d+EVENTS.length)%EVENTS.length].id);
+}
+function toast(msg){ const t=$("#toast"); t.textContent=msg; t.classList.add("on"); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove("on"),3600); }
+
+/* ============================================================
+   7. MAP
+   ============================================================ */
+const CITY={
+ /* key: [ancient name, name today, dx, dy, text-anchor] */
+ rome:["Rome","Rome, Italy"], puteoli:["Pozzuoli","Pozzuoli, Italy",-8,-5,"end"],
+ rhegium:["Rhegium","Reggio Calabria, Italy",-8,4,"end"], syracuse:["Syracuse","Syracuse, Italy",7,13],
+ malta:["Melita","Malta",7,13], fairhavens:["Fair Havens","Kaloi Limenes, Greece",-8,13,"end"],
+ philippi:["Philippi","Filippoi, Greece"], thessalonica:["Thessalonica","Thessaloniki, Greece",7,13],
+ berea:["Berea","Veria, Greece",-8,-5,"end"], athens:["Athens","Athens, Greece",7,14],
+ corinth:["Corinth","Corinth, Greece",-8,-5,"end"],
+ troas:["Troas","Alexandria Troas, Turkey"], ephesus:["Ephesus","Selcuk, Turkey",-8,-5,"end"],
+ miletus:["Miletus","Balat, Turkey",-8,12,"end"], myra:["Myra","Demre, Turkey",7,13],
+ pisidian:["Pisidian Antioch","Yalvac, Turkey",-8,-6,"end"], iconium:["Iconium","Konya, Turkey",7,-6],
+ lystra:["Lystra","Hatunsaray, Turkey",-8,13,"end"], derbe:["Derbe","Karaman, Turkey",7,13],
+ perga:["Perga","Aksu, Turkey",-8,13,"end"], tarsus:["Tarsus","Tarsus, Turkey",7,-6],
+ antiochsyria:["Antioch","Antakya, Turkey",7,6], salamis:["Salamis","Famagusta, Cyprus",7,-6],
+ paphos:["Paphos","Paphos, Cyprus",-8,12,"end"], damascus:["Damascus","Damascus, Syria",7,-6],
+ jerusalem:["Jerusalem","Jerusalem",7,13], caesarea:["Caesarea","Caesarea, Israel",-8,4,"end"],
+ tyre:["Tyre","Tyre, Lebanon",-8,6,"end"], sidon:["Sidon","Sidon, Lebanon",7,-7]
+};
+/* the dataset predates the 2019 rename */
+const CTY_FIX={"Macedonia":"North Macedonia","Bosnia and Herz.":"Bosnia and Herzegovina","N. Cyprus":"N. Cyprus"};
+
+const JOURNEYS=[
+ {n:"I", label:"First Journey", years:"AD 46-49", c:"#C9A227",
+  path:["antiochsyria","salamis","paphos","perga","pisidian","iconium","lystra","derbe","lystra","perga","antiochsyria"]},
+ {n:"II",label:"Second Journey",years:"AD 49-52", c:"#E8CE72",
+  path:["antiochsyria","tarsus","derbe","lystra","troas","philippi","thessalonica","berea","athens","corinth","ephesus","caesarea","jerusalem","antiochsyria"]},
+ {n:"III",label:"Third Journey", years:"AD 52-57", c:"#A98BE0",
+  path:["antiochsyria","ephesus","troas","philippi","corinth","philippi","troas","miletus","tyre","caesarea","jerusalem"]},
+ {n:"R", label:"To Rome",       years:"AD 59-61", c:"#F0D98A",
+  path:["caesarea","sidon","myra","fairhavens","malta","syracuse","rhegium","puteoli","rome"]}
+];
+const X=k=>GEO.xy[k][0], Y=k=>GEO.xy[k][1];
+
+function smooth(pts){
+  if(pts.length<2)return"";
+  let d=`M${pts[0][0]} ${pts[0][1]}`;
+  for(let i=1;i<pts.length;i++){
+    const [x0,y0]=pts[i-1],[x1,y1]=pts[i];
+    const mx=(x0+x1)/2,my=(y0+y1)/2, dx=x1-x0,dy=y1-y0;
+    const cx=mx-dy*0.11, cy=my+dx*0.11;
+    d+=` Q${cx.toFixed(1)} ${cy.toFixed(1)} ${x1} ${y1}`;
+  }
+  return d;
+}
+let activeJ=0, modern=false;
+
+function renderMap(){
+  const W=GEO.W,H=GEO.H;
+  const lands=GEO.countries.map(c=>`<path class="cty" data-n="${esc(c.n)}" d="${c.d}"/>`).join("");
+  /* Malta is below the resolution of the 1:110m dataset — drawn by hand */
+  const malta=`<ellipse class="cty" cx="${GEO.malta[0]}" cy="${GEO.malta[1]}" rx="3.4" ry="2.2"/>`;
+  const grid=`<g class="grat">`+
+    GEO.grat.mer.map(([x,lon])=>`<line x1="${x}" y1="0" x2="${x}" y2="${H}"/><text class="gratLbl" x="${x+3}" y="12">${lon}°E</text>`).join("")+
+    GEO.grat.par.map(([y,lat])=>`<line x1="0" y1="${y}" x2="${W}" y2="${y}"/><text class="gratLbl" x="4" y="${y-3}">${lat}°N</text>`).join("")+`</g>`;
+  const ctyLbl=`<g class="ctyLbls">`+Object.entries(GEO.lbl).map(([n,[x,y]])=>
+    `<text class="ctyLbl${n==="Lebanon"||n==="Malta"||n==="Cyprus"?" sm":""}" x="${x}" y="${y}">${esc(CTY_FIX[n]||n)}</text>`).join("")+`</g>`;
+  const routes=JOURNEYS.map((j,i)=>
+    `<path class="route" id="rt${i}" d="${smooth(j.path.map(k=>[X(k),Y(k)]))}" stroke="${j.c}"/>`).join("");
+  const nodes=Object.entries(CITY).map(([k,[anc,mod,dx,dy,an]])=>{
+    const x=X(k),y=Y(k), tx=x+(dx==null?7:dx), ty=y+(dy==null?-5:dy);
+    const a=an?` text-anchor="${an}"`:"";
+    return `<g class="cityNode" data-city="${k}" tabindex="0" role="button" aria-label="${esc(anc)} — today ${esc(mod)}">
+       <circle class="halo" cx="${x}" cy="${y}" r="5"/>
+       <circle class="dot" cx="${x}" cy="${y}" r="3.4"/>
+       <circle class="hit" cx="${x}" cy="${y}" r="13"/>
+       <text class="cityLbl anc" x="${tx}" y="${ty}"${a}>${esc(anc)}</text>
+       <text class="cityLbl mod" x="${tx}" y="${ty}"${a}>${esc(mod)}</text></g>`;
+  }).join("");
+
+  $("#mapshell").innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Map of Paul's journeys across the Mediterranean">
+    <defs><radialGradient id="seaG" cx=".5" cy=".45" r=".75">
+      <stop offset="0" stop-color="#15130f"/><stop offset="1" stop-color="#090806"/></radialGradient></defs>
+    <rect class="sea" width="${W}" height="${H}" fill="url(#seaG)"/>
+    ${grid}
+    <g class="lands">${lands}${malta}</g>
+    <path class="coast" d="${GEO.coast}"/>
+    <path class="borders" d="${GEO.borders}"/>
+    ${ctyLbl}
+    <text class="seaLbl anc" x="${GEO.sea[0]}" y="${GEO.sea[1]}">MARE NOSTRUM</text>
+    <text class="seaLbl mod" x="${GEO.sea[0]}" y="${GEO.sea[1]}">MEDITERRANEAN SEA</text>
+    ${routes}${nodes}</svg>`;
+
+  $("#jbar").innerHTML=JOURNEYS.map((j,i)=>
+    `<button class="chip" data-j="${i}" aria-pressed="${i===activeJ}">${j.label} · ${j.years}</button>`).join("")+
+    `<span class="sep"></span>
+     <button class="tog" id="eraBtn" aria-pressed="${modern}"><span class="dot"></span>Modern Names &amp; Borders</button>`;
+  $("#mapshell").classList.toggle("modern",modern);
+  setJourney(activeJ,true);
+}
+
+function setEra(on){
+  modern=on;
+  const sh=$("#mapshell");
+  sh.classList.add("shifting");
+  sh.classList.toggle("modern",modern);
+  const b=$("#eraBtn"); if(b)b.setAttribute("aria-pressed",String(modern));
+  /* the 3-second crossing: borders draw first, then places rename, then countries */
+  const bd=sh.querySelector(".borders");
+  try{ if(modern&&bd&&bd.getTotalLength&&bd.animate){
+    const L=bd.getTotalLength(); bd.style.strokeDasharray=L+" "+L;
+    bd.animate([{strokeDashoffset:L},{strokeDashoffset:0}],{duration:2000,easing:"ease-in-out",fill:"forwards"});
+  } else if(bd){ bd.style.strokeDasharray="none"; } }catch(err){}
+  if(Snd.enabled){
+    if(modern){ [0,3,5].forEach((n,i)=>setTimeout(()=>Snd.pluck(n),i*420)); setTimeout(()=>Snd.reveal(),1100); }
+    else { [5,3,0].forEach((n,i)=>setTimeout(()=>Snd.pluck(n),i*420)); }
+  }
+  clearTimeout(setEra._t);
+  setEra._t=setTimeout(()=>sh.classList.remove("shifting"),3100);
+  toast(modern?"Today’s names and borders · U.S. English":"Names as Paul knew them");
+}
+
+function setJourney(i,quiet){
+  activeJ=i;
+  $$("#jbar .chip[data-j]").forEach(b=>b.setAttribute("aria-pressed",+b.dataset.j===i));
+  $$(".route").forEach((r,k)=>r.classList.toggle("on",k===i));
+  const set=new Set(JOURNEYS[i].path);
+  $$(".cityNode").forEach(n=>n.classList.toggle("act",set.has(n.dataset.city)));
+  const rt=document.getElementById("rt"+i);
+  try{ if(rt&&rt.getTotalLength&&rt.animate){
+    const L=rt.getTotalLength(); rt.style.strokeDasharray="7 7";
+    rt.animate([{strokeDashoffset:L},{strokeDashoffset:0}],{duration:2200,easing:"ease-out"});
+  } }catch(err){}
+  if(!quiet){ JOURNEYS[i].path.forEach((c,k)=>setTimeout(()=>Snd.pluck(k),k*130)); }
+}
+
+/* ============================================================
+   8. QUIZ
+   ============================================================ */
+const QUIZ=[3,4,7,13,18,23,24,25];
+let qi=0,qScore=0;
+function renderQuiz(){
+  if(qi>=QUIZ.length){ endQuiz(); return; }
+  const e=EVENTS.find(x=>x.id===QUIZ[qi]);
+  $("#quizWrap").innerHTML=`
+    <p class="qprog">Question ${qi+1} of ${QUIZ.length}</p>
+    <p class="qprompt">${esc(e.title)}</p>
+    <p class="qsub">${esc(e.body)}</p>
+    <div class="qcard" id="qcard">${cardHTML(e,true)}</div>
+    <p class="qprompt" style="font-size:15px">Was God's will advancing here?</p>
+    <div class="qopts">
+      <button class="qopt" data-a="advancing">Advancing</button>
+      <button class="qopt" data-a="hidden">Hidden</button>
+      <button class="qopt" data-a="resisted">Resisted</button>
+    </div>`;
+}
+function answer(a){
+  const e=EVENTS.find(x=>x.id===QUIZ[qi]);
+  const right=a===e.will; if(right)qScore++;
+  $$(".qopt").forEach(b=>{ b.disabled=true;
+    if(b.dataset.a===e.will)b.classList.add("right");
+    else if(b.dataset.a===a)b.classList.add("wrong"); });
+  const c=$("#qcard .card"); c.classList.remove("unknown"); c.classList.add("reveal-will");
+  right?Snd.right():Snd.wrong(); setTimeout(()=>Snd.will(e.will),260);
+  const fb=document.createElement("div"); fb.className="qfeed";
+  fb.innerHTML=`<strong style="font-family:var(--serif);letter-spacing:.1em">${right?"Rightly Discerned":"Look Again"}</strong><br>${esc(e.where)}`;
+  $("#quizWrap").appendChild(fb);
+  const nb=document.createElement("button"); nb.className="mbtn pri";
+  nb.textContent=qi<QUIZ.length-1?"Next ›":"See the Whole Race ›";
+  nb.onclick=()=>{qi++;renderQuiz();};
+  const nav=document.createElement("div"); nav.className="mnav"; nav.appendChild(nb);
+  $("#quizWrap").appendChild(nav);
+}
+function endQuiz(){
+  $("#quizWrap").innerHTML=`
+    <p class="qprog">The Trial Complete</p>
+    <p class="qprompt">${qScore} of ${QUIZ.length} rightly discerned</p>
+    <div class="qfeed" style="max-width:60ch">
+      The point was never the score. Circumstance and God's will are two different readings —
+      and on nearly every card in Paul's life, the darkest picture carries the brightest gold.
+    </div>
+    <div class="mnav">
+      <button class="mbtn" id="qAgain">Take It Again</button>
+      <button class="mbtn pri" id="qEnd">The Race Finished ›</button>
+    </div>`;
+  $("#qAgain").onclick=()=>{qi=0;qScore=0;renderQuiz();};
+  $("#qEnd").onclick=()=>go("end");
+}
+
+/* ============================================================
+   9. FINALE
+   ============================================================ */
+function renderFan(){
+  const f=$("#fan"); f.innerHTML="";
+  EVENTS.forEach((e,i)=>{
+    const d=document.createElement("div"); d.innerHTML=cardHTML(e);
+    const c=d.firstElementChild;
+    const a=(i-(EVENTS.length-1)/2)*3.1;
+    c.style.cssText+=`position:absolute;width:118px;transform:rotate(${a}deg) translateY(${Math.abs(a)*0.8}px);animation-delay:${i*55}ms;z-index:${i}`;
+    c.addEventListener("click",()=>openCard(e.id));
+    f.appendChild(c);
+  });
+}
+function godSweep(){
+  document.body.classList.add("godhand"); $("#godBtn").setAttribute("aria-pressed","true");
+  Snd.reveal();
+}
+
+/* ============================================================
+   10. ROUTER + EVENTS
+   ============================================================ */
+function go(name){
+  $$(".view").forEach(v=>v.classList.toggle("on",v.id==="v-"+name));
+  $$("#nav button").forEach(b=>b.setAttribute("aria-current",b.dataset.go===name?"true":"false"));
+  window.scrollTo({top:0,behavior:"instant"in document.documentElement.style?"instant":"auto"});
+  if(name==="timeline"){
+    initTimeline(); buildTimeline();
+    if(!TL._once){ TL._once=true; TL.pan=TL.target=0; layoutTimeline();
+      setTimeout(()=>{ tlGoto(33); $("#tlStage").focus({preventScroll:true}); },500); }
+  }
+  if(name==="map"&&!$("#mapshell").innerHTML)renderMap();
+  if(name==="quiz"&&!$("#quizWrap").innerHTML)renderQuiz();
+  if(name==="end"){ renderFan(); setTimeout(godSweep,700); }
+  if(name==="gallery"&&Snd.enabled)Snd.ambient(2);
+}
+
+document.addEventListener("click",ev=>{
+  const nav=ev.target.closest("[data-go]");
+  if(nav){go(nav.dataset.go);return;}
+
+  const chip=ev.target.closest("#filters .chip");
+  if(chip){ filt[chip.dataset.f]=chip.dataset.v;
+    $$(`#filters .chip[data-f="${chip.dataset.f}"]`).forEach(b=>b.setAttribute("aria-pressed",b===chip));
+    renderGallery(); Snd.hover(); return; }
+
+  if(ev.target.closest("#eraBtn")){ setEra(!modern); return; }
+  const jb=ev.target.closest("#jbar .chip[data-j]");
+  if(jb){ setJourney(+jb.dataset.j); return; }
+
+  const city=ev.target.closest(".cityNode");
+  if(city){ const e=EVENTS.find(x=>x.city===city.dataset.city);
+    if(e)openCard(e.id); else toast("A waypoint on the road"); return; }
+
+  const qo=ev.target.closest(".qopt");
+  if(qo&&!qo.disabled){ answer(qo.dataset.a); return; }
+
+  const lt=ev.target.closest(".badge.letter");
+  if(lt){ const L=LETTERS[lt.dataset.letter];
+    toast(`${lt.dataset.letter} · AD ${L[0]} · from ${L[1]}`); return; }
+
+  if(ev.target.closest("#modal .flipper")){ $("#flipper").classList.toggle("flipped"); Snd.flip(); return; }
+  if(ev.target.id==="modal"){ closeCard(); return; }
+
+  const card=ev.target.closest("#acts .card, #v-title .card");
+  if(card){ openCard(+card.dataset.id); return; }
+});
+
+document.addEventListener("keydown",ev=>{
+  if($("#modal").classList.contains("on")){
+    if(ev.key==="Escape")closeCard();
+    if(ev.key==="ArrowRight")step(1);
+    if(ev.key==="ArrowLeft")step(-1);
+    if(ev.key===" "||ev.key==="Enter"){ev.preventDefault();$("#flipper").classList.toggle("flipped");Snd.flip();}
+    return;
+  }
+  const c=document.activeElement&&document.activeElement.closest&&document.activeElement.closest(".card");
+  if(c&&(ev.key==="Enter"||ev.key===" ")){ev.preventDefault();openCard(+c.dataset.id);}
+  const n=document.activeElement&&document.activeElement.closest&&document.activeElement.closest(".cityNode");
+  if(n&&(ev.key==="Enter"||ev.key===" ")){ev.preventDefault();
+    const e=EVENTS.find(x=>x.city===n.dataset.city); if(e)openCard(e.id);}
+});
+
+$("#prevBtn").onclick=e=>{e.stopPropagation();step(-1)};
+$("#nextBtn").onclick=e=>{e.stopPropagation();step(1)};
+$("#closeBtn").onclick=e=>{e.stopPropagation();closeCard()};
+$("#replayGod").onclick=godSweep;
+$("#beginBtn").onclick=()=>{ if(!Snd.enabled){ if(Snd.toggle())$("#sndBtn").setAttribute("aria-pressed","true"); } go("gallery"); };
+$("#godBtn").onclick=function(){
+  const on=!document.body.classList.contains("godhand");
+  document.body.classList.toggle("godhand",on);
+  this.setAttribute("aria-pressed",String(on));
+  if(on)Snd.reveal();
+  toast(on?"Circumstance dimmed — only God's will remains":"Circumstance restored");
+};
+$("#sndBtn").onclick=function(){ const s=Snd.toggle(); this.setAttribute("aria-pressed",String(s));
+  toast(s?"Sound on":"Sound off"); };
+
+/* ---- boot ---- */
+$("#heroCard").innerHTML=cardHTML(EVENTS[3]);
+renderGallery();
+bindTilt(document.body);
+$$(".card").forEach(c=>c.addEventListener("pointerenter",()=>Snd.hover()));
+
+})();
+</script>
+</body>
+</html>
